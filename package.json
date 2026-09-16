@@ -1,0 +1,12 @@
+{
+  "name": "s140-meeting-scheduler",
+  "version": "4.0.0",
+  "private": true,
+  "description": "S-140 Meeting Scheduler with official JW.org and PDF import",
+  "scripts": {
+    "start": "node server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

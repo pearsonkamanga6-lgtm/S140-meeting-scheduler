@@ -1,0 +1,30 @@
+S-140 Meeting Scheduler v5.3
+
+FIELD MINISTRY PDF IMPROVEMENT
+
+For CITANI KHAMA PA ULALIKI, Student and Assistant are now separate columns.
+
+When Auxiliary Classroom is OFF:
+  Nkhani / Gawo | Wophunzira / Student | Wothandiza / Assistant
+
+When Auxiliary Classroom is ON:
+  Kalasi Yowonjezera
+    Student | Assistant
+  Holo Yaikulu
+    Student | Assistant
+
+This removes the old layout where Student and Assistant names appeared one
+above the other in one "Wopatsidwa" cell.
+
+For a Talk assignment, the speaker appears in the Student/Speaker side and the
+Assistant cell remains blank.
+
+IMPORTANT FOR EXISTING DATA
+v5.3 intentionally keeps the same Windows local address as v5.2:
+  http://127.0.0.1:8769/
+
+That preserves your browser's existing publishers, schedules and assignment
+history. Close the old v5.2 PowerShell server window before starting v5.3.
+
+Then double-click START_S140_ONLINE.bat and confirm:
+  Running version: v5.3
