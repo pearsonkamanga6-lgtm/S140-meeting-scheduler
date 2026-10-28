@@ -1,0 +1,22 @@
+{
+  "name": "S-140 Meeting Scheduler",
+  "short_name": "S-140",
+  "description": "Ndandanda ya msonkhano - Cinyanja v5.4 - Recent usage warnings",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#087f8c",
+  "theme_color": "#087f8c",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
