@@ -59,7 +59,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
 <body>
 <div class="app">
  <div class="topbar">
-  <div class="brand"><h1>S-140 Meeting Scheduler <span style="font-size:.72rem;background:#173f49;color:#fff;padding:3px 7px;border-radius:999px;vertical-align:middle">v5.3</span></h1><small>Ndandanda ya msonkhano • Cinyanja</small></div>
+  <div class="brand"><h1>S-140 Meeting Scheduler <span style="font-size:.72rem;background:#173f49;color:#fff;padding:3px 7px;border-radius:999px;vertical-align:middle">v5.4</span></h1><small>Ndandanda ya msonkhano • Cinyanja</small></div>
   <div class="tabs">
    <button class="tabbtn active" data-tab="scheduleTab">Schedule</button>
    <button class="tabbtn" data-tab="weeksTab">Weeks</button>
@@ -71,7 +71,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
  </div>
 
  <section id="scheduleTab" class="tab">
-  <div id="versionBanner" class="notice ok" style="margin-top:14px"><strong>Running version:</strong> v5.3. If you do not see v5.3 here, an older copy is still open.</div><div id="standaloneBanner" class="notice warn hidden" style="margin-top:14px"><strong>Standalone mode:</strong> PDF import works, but JW.org automatic fetch needs online mode. Extract the v5.2 ZIP and double-click <strong>START_S140_ONLINE.bat</strong>.</div>
+  <div id="versionBanner" class="notice ok" style="margin-top:14px"><strong>Running version:</strong> v5.4. If you do not see v5.3 here, an older copy is still open.</div><div id="standaloneBanner" class="notice warn hidden" style="margin-top:14px"><strong>Standalone mode:</strong> PDF import works, but JW.org automatic fetch needs online mode. Extract the v5.2 ZIP and double-click <strong>START_S140_ONLINE.bat</strong>.</div>
   <div class="card">
    <div class="weekbar">
     <strong>Week:</strong>
@@ -353,6 +353,60 @@ function guidance(pubId,week,role){
  }
  return`last used: ${h[0].weekLabel||h[0].week||""}`
 }
+function recentUsageInfo(pubId,week,role){
+ const h=historyBefore(pubId,week,role);
+ if(!h.length)return null;
+ const last=h[0];
+ const lastDate=parseDate(last.weekStart||String(last.date||"").slice(0,10));
+ const curDate=parseDate(week.startDate);
+ if(!lastDate||!curDate)return{weeks:null,days:null,entry:last};
+ const diffDays=Math.max(0,Math.round((curDate-lastDate)/86400000));
+ const weeks=Math.floor(diffDays/7);
+ return{weeks,days:diffDays,entry:last}
+}
+function formatRecentWarning(name,info,newLabel){
+ const e=info.entry;
+ const when=info.weeks===0?"recently (this past week)":info.weeks===1?"last week":info.weeks===2?"2 weeks ago":`${info.weeks} weeks ago`;
+ const lastPart=e.part||e.role||"assignment";
+ const lastWeek=e.weekLabel||e.weekStart||"";
+ return `${name} was used ${when}.\n\nLast: ${lastPart} (${lastWeek})\nAssigning now: ${newLabel}\n\nThis person was used ${when}. Continue to use ${name}?`;
+}
+function confirmRecentUsage(pubId,role,newLabel){
+ if(!pubId)return true;
+ const w=currentWeek();
+ // Check role-specific recent usage within 2 weeks
+ const info=recentUsageInfo(pubId,w,role);
+ if(!info)return true;
+ if(info.weeks!==null && info.weeks<=2){
+   const name=pubName(pubId)||"This publisher";
+   return confirm(formatRecentWarning(name,info,newLabel));
+ }
+ return true;
+}
+function confirmRecentUsageGeneral(pubId,newLabel){
+ // Fallback: check ANY role within last 1 week (to catch frequent use across different parts)
+ if(!pubId)return true;
+ const w=currentWeek();
+ const cutoff=w.startDate||"9999-12-31";
+ const all=state.history.filter(h=>h.publisherId===pubId).filter(h=>((h.weekStart||String(h.date||"").slice(0,10))<cutoff||!w.startDate)).sort((a,b)=>String(b.weekStart||b.date||"").localeCompare(String(a.weekStart||a.date||"")));
+ if(!all.length)return true;
+ const last=all[0];
+ const lastDate=parseDate(last.weekStart||String(last.date||"").slice(0,10));
+ const curDate=parseDate(w.startDate);
+ if(!lastDate||!curDate)return true;
+ const days=Math.max(0,Math.round((curDate-lastDate)/86400000));
+ const weeks=Math.floor(days/7);
+ if(weeks<=1){
+   const name=pubName(pubId)||"This publisher";
+   const when=weeks===0?"recently":weeks===1?"last week":"2 weeks ago";
+   // Only warn if role-specific didn't already warn (avoid double)
+   const roleSpecific=recentUsageInfo(pubId,w,last.role);
+   if(roleSpecific && roleSpecific.weeks<=2)return true;
+   return confirm(`${name} was used ${when} for a different assignment.\n\nLast: ${last.part||last.role} (${last.weekLabel||last.weekStart})\nNow: ${newLabel}\n\nContinue to use ${name}?`);
+ }
+ return true;
+}
+
 function eligiblePublishers(role,filter="all",selected="",historyRole=null){
  const w=currentWeek(),hr=historyRole||role;
  let arr=state.publishers.filter(p=>isEligible(p,role,w)).filter(p=>filter==="all"||p.gender===filter);
@@ -363,7 +417,12 @@ function eligiblePublishers(role,filter="all",selected="",historyRole=null){
    if(!bh.length)return 1;
    return String(ah[0].weekStart||ah[0].date||"").localeCompare(String(bh[0].weekStart||bh[0].date||""))||a.name.localeCompare(b.name)
  });
- return'<option value="">— Select —</option>'+arr.map(p=>`<option value="${p.id}" ${p.id===selected?"selected":""}>${esc(p.name)} — ${esc(guidance(p.id,w,hr))}</option>`).join("")
+ return'<option value="">— Select —</option>'+arr.map(p=>{
+   const ri=recentUsageInfo(p.id,w,hr);
+   const isRecent=ri && ri.weeks!==null && ri.weeks<=2;
+   const warn=isRecent?" ⚠️ USED "+(ri.weeks===0?"RECENTLY":ri.weeks===1?"LAST WEEK":ri.weeks+"W AGO")+" - ":"";
+   return `<option value="${p.id}" ${p.id===selected?"selected":""}>${esc(warn+p.name)} — ${esc(guidance(p.id,w,hr))}</option>`
+ }).join("")
 }
 function firstLivingNumber(w=currentWeek()){return 4+w.ministry.length}
 function cbsNo(w=currentWeek()){return firstLivingNumber(w)+w.living.length}
@@ -419,7 +478,10 @@ function renderMinistry(){
    const previous=p[h][k]||"",next=s.value;
    const partNo=4+i,hall=hallLabel(h),roleLabel=p.type==="talk"?"Wokamba":k==="assistant"?"Wothandiza":"Wophunzira";
    const newLabel=`Part ${partNo}: ${p.title||"[Title]"} (${roleLabel})${hall?" — "+hall:""}`;
+   const role=k==="assistant"?"ministryAssistant":p.type==="talk"?"ministryTalk":"ministryStudent";
    if(next&&next!==previous&&!confirmAdditionalAssignment(next,newLabel)){s.value=previous;return}
+   if(next&&next!==previous&&!confirmRecentUsage(next,role,newLabel)){s.value=previous;return}
+   if(next&&next!==previous&&!confirmRecentUsageGeneral(next,newLabel)){s.value=previous;return}
    p[h][k]=next;
    if(k==="student"&&p.type!=="talk"){const g=studentGender(next),a=pubById(p[h].assistant);if(a&&g&&a.gender!==g)p[h].assistant=""}
    saveState();renderMinistry();toggleAux();renderConflicts()
@@ -435,6 +497,8 @@ function renderLiving(){
    const i=+x.closest(".part").dataset.i,p=w.living[i],previous=p.person||"",next=x.value;
    const label=`Part ${firstLivingNumber(w)+i}: ${p.title||"[Title]"}`;
    if(next&&next!==previous&&!confirmAdditionalAssignment(next,label)){x.value=previous;return}
+   if(next&&next!==previous&&!confirmRecentUsage(next,"livingTalk",label)){x.value=previous;return}
+   if(next&&next!==previous&&!confirmRecentUsageGeneral(next,label)){x.value=previous;return}
    p.person=next;saveState();renderConflicts()
  }));
  livingParts.querySelectorAll(".delete-living").forEach(b=>b.addEventListener("click",()=>{if(w.living.length<=1)return alert("Keep at least one Living as Christians part.");w.living.splice(+b.closest(".part").dataset.i,1);saveState();renderSchedule()}))
@@ -503,6 +567,14 @@ function conflictIssues(w=currentWeek()){
  w.ministry.forEach((p,i)=>["main",...(w.auxEnabled?["aux"]:[])].forEach(h=>{if(p.type!=="talk"&&p[h].student&&p[h].student===p[h].assistant)issues.push({level:"error",text:`Part ${4+i} ${h}: student and assistant are the same person.`});if(p.type!=="talk"&&p[h].student&&p[h].assistant&&studentGender(p[h].student)!==studentGender(p[h].assistant))issues.push({level:"error",text:`Part ${4+i} ${h}: student and assistant must be the same gender.`})}));
  if(w.auxEnabled)w.ministry.forEach((p,i)=>{["student","assistant"].forEach(k=>{if(p.main[k]&&p.main[k]===p.aux[k])issues.push({level:"error",text:`Part ${4+i}: ${pubName(p.main[k])} is assigned in both Main Hall and Auxiliary Classroom at the same time.`})})});
  rec.forEach(r=>{const p=pubById(r.publisherId);if(p&&!isAvailable(p,w))issues.push({level:"error",text:`${p.name} is marked unavailable for this week.`})});
+ // NEW: Recent usage warnings (last 2 weeks)
+ rec.forEach(r=>{
+   const info=recentUsageInfo(r.publisherId,w,r.role);
+   if(info && info.weeks!==null && info.weeks<=2){
+     const when=info.weeks===0?"recently":info.weeks===1?"last week":`${info.weeks} weeks ago`;
+     issues.push({level:"warn",text:`⚠️ ${pubName(r.publisherId)} was used ${when} (${info.entry.weekLabel||info.entry.weekStart} - ${info.entry.part}). Consider using someone else or confirm to continue.`});
+   }
+ });
  return issues
 }
 function renderConflicts(){
@@ -1325,7 +1397,11 @@ document.addEventListener("input",e=>{if(["weekLabel","congregation","bibleReadi
 document.addEventListener("change",e=>{
  if(e.target.matches(".assignment-select")){
    const s=e.target,w=currentWeek(),previous=w.fields[s.id]||"",next=s.value;
-   if(next&&next!==previous&&!confirmAdditionalAssignment(next,staticAssignmentLabel(s))){s.value=previous;return}
+   const role=s.dataset.role||"";
+   const newLabel=staticAssignmentLabel(s);
+   if(next&&next!==previous&&!confirmAdditionalAssignment(next,newLabel)){s.value=previous;return}
+   if(next&&next!==previous&&!confirmRecentUsage(next,role,newLabel)){s.value=previous;return}
+   if(next&&next!==previous&&!confirmRecentUsageGeneral(next,newLabel)){s.value=previous;return}
    collectFormToWeek();renderConflicts()
  }
 });

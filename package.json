@@ -1,8 +1,8 @@
 {
   "name": "s140-meeting-scheduler",
-  "version": "4.0.0",
+  "version": "5.4.0",
   "private": true,
-  "description": "S-140 Meeting Scheduler with official JW.org and PDF import",
+  "description": "S-140 Meeting Scheduler v5.4 - Recent usage warnings (1-2 weeks) with continue confirmation",
   "scripts": {
     "start": "node server.js"
   },
