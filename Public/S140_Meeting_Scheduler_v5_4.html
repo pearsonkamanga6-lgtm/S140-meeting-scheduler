@@ -1,0 +1,1448 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#087f8c">
+<title>S-140 Meeting Scheduler</title>
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{
+ --bg:#f3f6f7;--card:#fff;--text:#1f2c31;--muted:#66767c;--line:#d4dfe2;
+ --teal:#008a9a;--gold:#d38a00;--red:#c92834;--blue:#356fbd;--navy:#173f49;
+ --soft:#eef4f5;--shadow:0 8px 26px rgba(20,45,55,.08);--radius:16px
+}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Arial,Helvetica,sans-serif}
+button,input,select,textarea{font:inherit}button{cursor:pointer}
+.app{max-width:1240px;margin:auto;padding:16px}
+.topbar{position:sticky;top:8px;z-index:50;background:#fff;border:1px solid var(--line);border-radius:18px;padding:13px 15px;box-shadow:var(--shadow);display:flex;gap:12px;align-items:center;justify-content:space-between}
+.brand h1{font-size:1.2rem;margin:0}.brand small{color:var(--muted)}
+.tabs,.toolbar,.actions{display:flex;gap:8px;flex-wrap:wrap}
+button,.filelabel{border:1px solid var(--line);background:#fff;border-radius:10px;padding:9px 12px;font-weight:700}
+button:hover,.filelabel:hover{filter:brightness(.98)}.primary{background:var(--teal);border-color:var(--teal);color:#fff}.pdfbtn{background:var(--navy);border-color:var(--navy);color:#fff}.danger{color:#a4211c;border-color:#efb4af}.warningbtn{color:#785900;border-color:#dfc36e;background:#fff9e8}
+.tabbtn.active{background:var(--teal);color:#fff;border-color:var(--teal)}
+.card{background:#fff;border:1px solid var(--line);border-radius:var(--radius);padding:16px;box-shadow:var(--shadow);margin:14px 0}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:11px}.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:11px}
+label{font-size:.9rem;font-weight:700;color:#40545b;display:block;margin:0 0 5px}
+input,select,textarea{width:100%;padding:10px 11px;border:1px solid #bdc9cd;border-radius:10px;background:#fff;color:var(--text)}
+textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus{outline:3px solid rgba(0,138,154,.12);border-color:var(--teal)}
+.field{margin-top:10px}.muted{color:var(--muted)}.hidden{display:none!important}.smalltext{font-size:.82rem}
+.section{margin:18px 0}.section-title{font-size:1.25rem;font-weight:900;letter-spacing:.02em;border-bottom:2px solid #aab6ba;padding:0 0 8px;margin:0 0 10px}
+.treasures .section-title{color:var(--teal)}.ministry .section-title{color:var(--gold)}.living .section-title{color:var(--red)}
+.part{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px;margin:10px 0}
+.parthead{display:flex;gap:10px;align-items:center;justify-content:space-between}.parthead h3{font-size:1.08rem;margin:0;flex:1}
+.badge,.pill{display:inline-block;border-radius:999px;background:var(--soft);padding:4px 8px;font-size:.74rem;font-weight:700;margin:2px}
+.pill.brother{background:#e8f2ff}.pill.sister{background:#fff0f5}.pill.archived{background:#eee;color:#555}.pill.available{background:#eaf6ed;color:#24633a}.pill.unavailable{background:#fff0ef;color:#9c2f28}
+.hall{border:1px dashed #c5d1d4;border-radius:12px;background:#fbfcfc;padding:11px;margin-top:10px}.hall h4{margin:0 0 7px;font-size:.96rem}
+.filters{display:flex;gap:6px;flex-wrap:wrap;margin:5px 0}.filter{border-radius:999px;padding:5px 9px;font-size:.79rem}.filter.active{background:#e5f5f7;color:#075a64;border-color:#73b3bb}
+.switchrow{display:flex;gap:8px;align-items:center}.switchrow input{width:auto}
+.notice{border-radius:10px;padding:10px 11px;font-size:.87rem;margin-top:10px}.notice.ok{background:#eaf6ed;border:1px solid #b2dbbd;color:#24633a}.notice.warn{background:#fff3d7;border:1px solid #e7c66c;color:#694e0b}.notice.error{background:#fff0ef;border:1px solid #efb4af;color:#8d2822}
+.publisher-item,.week-item,.template-item{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;border-top:1px solid #edf0f1;padding:11px 0}.publisher-item:first-child,.week-item:first-child,.template-item:first-child{border-top:none}
+.row-actions{display:flex;gap:6px;flex-wrap:wrap}.small{padding:6px 9px;font-size:.79rem}
+.section-actions{display:flex;gap:8px;align-items:center;justify-content:space-between;margin:7px 0}
+.statgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.stat{border:1px solid var(--line);border-radius:12px;padding:10px;background:#fbfcfc}.stat strong{display:block;font-size:1.35rem}
+.empty{padding:22px;text-align:center;color:var(--muted);border:1px dashed #cbd5d8;border-radius:12px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.58);z-index:100;display:flex;align-items:center;justify-content:center;padding:18px}
+.modal-card{width:min(96vw,920px);max-height:92vh;overflow:auto;background:#fff;border-radius:16px;padding:16px;box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.modal-head{display:flex;justify-content:space-between;align-items:center;gap:10px;border-bottom:1px solid var(--line);padding-bottom:10px}
+.modal-head h2{margin:0}.closebtn{font-size:1.15rem}
+.history-row{display:grid;grid-template-columns:1.2fr 1fr .8fr;gap:8px;padding:7px 0;border-top:1px solid #edf0f1;font-size:.88rem}
+.weekbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap}.weekbar select{width:min(390px,100%)}.weekbar .spacer{flex:1}
+.preview-wrap{position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:120;display:flex;align-items:center;justify-content:center;padding:18px}
+.preview-card{width:min(96vw,1200px);max-height:95vh;background:#fff;border-radius:14px;padding:12px;overflow:auto}.preview-card iframe{width:100%;height:75vh;border:1px solid #ccd4d7;background:#fff}
+.footer-note{text-align:center;color:var(--muted);font-size:.8rem;margin:20px}
+.install-note{background:#eaf5f7;border:1px solid #b7dade;color:#275d65;border-radius:10px;padding:9px 10px}
+@media(max-width:900px){.grid3,.grid4,.statgrid{grid-template-columns:1fr 1fr}.topbar{position:static;align-items:flex-start;flex-direction:column}.tabs{width:100%}.tabbtn{flex:1}}
+@media(max-width:650px){.grid2,.grid3,.grid4,.statgrid{grid-template-columns:1fr}.parthead{align-items:flex-start;flex-direction:column}.publisher-item,.week-item,.template-item{grid-template-columns:1fr}.weekbar select{width:100%}}
+</style>
+</head>
+<body>
+<div class="app">
+ <div class="topbar">
+  <div class="brand"><h1>S-140 Meeting Scheduler <span style="font-size:.72rem;background:#173f49;color:#fff;padding:3px 7px;border-radius:999px;vertical-align:middle">v5.4</span></h1><small>Ndandanda ya msonkhano • Cinyanja</small></div>
+  <div class="tabs">
+   <button class="tabbtn active" data-tab="scheduleTab">Schedule</button>
+   <button class="tabbtn" data-tab="weeksTab">Weeks</button>
+   <button class="tabbtn" data-tab="publisherTab">Publishers</button>
+   <button class="tabbtn" data-tab="templatesTab">Templates</button>
+   <button class="tabbtn" data-tab="backupTab">Backup</button>
+   <button id="installBtn" class="hidden">Install App</button>
+  </div>
+ </div>
+
+ <section id="scheduleTab" class="tab">
+  <div id="versionBanner" class="notice ok" style="margin-top:14px"><strong>Running version:</strong> v5.4. If you do not see v5.3 here, an older copy is still open.</div><div id="standaloneBanner" class="notice warn hidden" style="margin-top:14px"><strong>Standalone mode:</strong> PDF import works, but JW.org automatic fetch needs online mode. Extract the v5.2 ZIP and double-click <strong>START_S140_ONLINE.bat</strong>.</div>
+  <div class="card">
+   <div class="weekbar">
+    <strong>Week:</strong>
+    <select id="weekSelector"></select>
+    <button id="newWeekGoBtn">+ New Week</button>
+    <button id="duplicateWeekBtn">Duplicate Week</button>
+    <button id="loadTemplateBtn">Load Template</button>
+    <button id="archiveWeekBtn" class="warningbtn">Archive</button>
+    <span class="spacer"></span>
+    <span id="weekStatus"></span>
+   </div>
+  </div>
+
+  <div class="toolbar">
+   <button class="primary" id="saveBtn">Save</button>
+   <button class="pdfbtn" id="pdfBtn">Download PDF</button>
+   <button id="previewBtn">PDF Preview</button>
+   <button id="printBtn">Print</button>
+   <button id="finalizeBtn">Finalize & Record History</button>
+   <button id="refreshJwBtn">Refresh Parts from JW.org</button>
+   <label class="filelabel">Import PDF to Current Week<input id="currentPdfInput" type="file" accept="application/pdf" style="display:none"></label>
+   <button class="danger" id="clearBtn">Clear Assignments</button>
+  </div>
+
+  <div class="card">
+   <div class="grid4">
+    <div><label>Sabata / Week label</label><input id="weekLabel" placeholder="September 7–13, 2026"></div>
+    <div><label>Start date</label><input id="weekStart" type="date"></div>
+    <div><label>End date</label><input id="weekEnd" type="date"></div>
+    <div><label>Mpingo / Congregation</label><input id="congregation"></div>
+   </div>
+   <div class="grid3">
+    <div class="field"><label>Kuwerenga Baibo kwa mlungu</label><input id="bibleReading" placeholder="YEREMIYA 32–33"></div>
+    <div class="field"><label>Cheyamani / Chairman</label><select class="assignment-select" data-role="chairman" id="chairman"></select></div>
+    <div class="field" id="auxCounselorWrap"><label>Mlangizi wa Kalasi Yowonjezera</label><select class="assignment-select" data-role="counselor" id="auxCounselor"></select></div>
+   </div>
+   <div class="grid4">
+    <div class="field"><label>Kalasi Yowonjezera</label><div class="switchrow"><input id="auxEnabled" type="checkbox"><span>Use auxiliary classroom</span></div></div>
+    <div class="field"><label>Nyimbo Yoyamba</label><input id="openingSong"></div>
+    <div class="field"><label>Pemphero Loyamba</label><select class="assignment-select" data-role="prayer" id="openingPrayer"></select></div>
+    <div class="field"><label>Mau Oyamba</label><input id="openingComments" value="1 min."><div class="smalltext muted">Cheyamani’s name appears automatically.</div></div>
+   </div>
+   <div id="conflictBox"></div>
+   <div class="notice ok"><strong>Role-specific memory:</strong> each dropdown remembers only that exact assignment. A recent Spiritual Gems assignment will not mark the same brother as recently used for Cheyamani, Bible Reading, Prayer, or another role.</div>
+  </div>
+
+  <div class="section treasures">
+   <h2 class="section-title">◆ CUMA COPEZEKA M’MAU A MULUNGU</h2>
+   <div class="part">
+    <div class="parthead"><h3>1. <input id="p1title" value="[Title]" style="display:inline-block;width:min(520px,75vw)"></h3><span class="badge">10 min.</span></div>
+    <div class="field"><label>Wokamba / Assigned brother</label><select class="assignment-select" data-role="treasuresTalk" id="p1person"></select></div>
+   </div>
+   <div class="part">
+    <div class="parthead"><h3>2. Kufufuza Cuma Cauzimu</h3><span class="badge">10 min.</span></div>
+    <div class="field"><label>Wokamba / Assigned brother</label><select class="assignment-select" data-role="spiritualGems" id="p2person"></select></div>
+   </div>
+   <div class="part">
+    <div class="parthead"><h3>3. Kuwerenga Baibo</h3><span class="badge">4 min.</span></div>
+    <div class="field"><label>Malemba / Scripture</label><input id="p3scripture" placeholder="e.g. Yer. 32:6–18"></div>
+    <div class="grid2">
+     <div class="hall"><h4>Holo Yaikulu</h4><select class="assignment-select" data-role="bibleReading" id="p3main"></select></div>
+     <div class="hall aux-only"><h4>Kalasi Yowonjezera</h4><select class="assignment-select" data-role="bibleReading" id="p3aux"></select></div>
+    </div>
+   </div>
+  </div>
+
+  <div class="section ministry">
+   <div class="section-actions"><h2 class="section-title" style="flex:1;margin:0">◆ CITANI KHAMA PA ULALIKI</h2><button class="primary small" id="addMinistryBtn">+ Add Part</button></div>
+   <div id="ministryParts"></div>
+  </div>
+
+  <div class="section living">
+   <div class="section-actions"><h2 class="section-title" style="flex:1;margin:0">◆ UMOYO WATHU WACIKHRISTU</h2><button class="small" id="addLivingBtn">+ Add Living Part</button></div>
+   <div class="part"><div class="grid2"><div><label>Nyimbo</label><input id="livingSong"></div><div><label>Optional note</label><input id="livingNote"></div></div></div>
+   <div id="livingParts"></div>
+   <div class="part">
+    <div class="parthead"><h3><span id="cbsNumber"></span>. Phunzilo la Baibo la Mpingo</h3><span class="badge">30 min.</span></div>
+    <div class="field"><label>Reference / Buku ndi mutu</label><input id="cbsReference" placeholder="e.g. wcg mutu 8"></div>
+    <div class="grid2">
+     <div class="field"><label>Wotsogoza / Conductor</label><select class="assignment-select" data-role="cbsConductor" id="cbsConductor"></select></div>
+     <div class="field"><label>Wowerenga / Reader</label><select class="assignment-select" data-role="cbsReader" id="cbsReader"></select></div>
+    </div>
+   </div>
+   <div class="part">
+    <div class="grid3">
+     <div><label>Mau Othela</label><input id="concludingComments" value="3 min."><div class="smalltext muted">Cheyamani’s name appears automatically.</div></div>
+     <div><label>Nyimbo Yothela</label><input id="closingSong"></div>
+     <div><label>Pemphero Lothela</label><select class="assignment-select" data-role="prayer" id="closingPrayer"></select></div>
+    </div>
+   </div>
+  </div>
+ </section>
+
+ <section id="weeksTab" class="tab hidden">
+  <div class="card">
+   <h2 style="margin-top:0">Create a New Week</h2>
+   <div class="grid4">
+    <div><label>Start date</label><input id="newWeekStart" type="date"></div>
+    <div><label>End date</label><input id="newWeekEnd" type="date"></div>
+    <div><label>Label (optional)</label><input id="newWeekLabel"></div>
+    <div><label>Template</label><select id="newWeekTemplate"></select></div>
+   </div>
+   <div class="toolbar">
+    <button class="primary" id="createWeekBtn">Create Manually</button>
+    <button class="pdfbtn" id="fetchJwBtn">Fetch from JW.org</button>
+    <label class="filelabel">Upload Workbook PDF<input id="weekPdfInput" type="file" accept="application/pdf" style="display:none"></label>
+   </div>
+   <div id="onlineImportStatus" class="notice ok"><strong>Automatic import:</strong> choose the week start date, then fetch the official Cinyanja schedule from JW.org or upload the official meeting-workbook PDF.</div>
+  </div>
+  <div class="card">
+   <div class="grid3">
+    <div><label>Search weeks</label><input id="weekSearch" placeholder="Search date, reading, congregation"></div>
+    <div><label>Status</label><select id="weekFilter"><option value="active">Active</option><option value="archived">Archived</option><option value="all">All</option></select></div>
+    <div><label>Sort</label><select id="weekSort"><option value="newest">Newest first</option><option value="oldest">Oldest first</option></select></div>
+   </div>
+   <div id="weeksList"></div>
+  </div>
+ </section>
+
+ <section id="publisherTab" class="tab hidden">
+  <div class="card">
+   <h2 style="margin-top:0">Publishers</h2>
+   <div class="grid3">
+    <div><label>Full name</label><input id="pubName"></div>
+    <div><label>Brother / Sister</label><select id="pubGender"><option value="brother">Brother</option><option value="sister">Sister</option></select></div>
+    <div><label>Status</label><select id="pubActive"><option value="true">Active</option><option value="false">Inactive</option></select></div>
+   </div>
+   <div class="field"><label>Eligible assignments</label><div class="grid3" id="eligibilityGrid"></div></div>
+   <div class="toolbar"><button class="primary" id="addPublisherBtn">Add Publisher</button><button id="cancelEditBtn" class="hidden">Cancel Edit</button></div>
+  </div>
+  <div class="card">
+   <div class="grid2"><div><label>Search</label><input id="pubSearch" placeholder="Search publisher"></div><div><label>Filter</label><select id="pubFilter"><option value="all">All</option><option value="brother">Brothers</option><option value="sister">Sisters</option><option value="inactive">Inactive</option></select></div></div>
+   <div id="publisherList"></div>
+  </div>
+ </section>
+
+ <section id="templatesTab" class="tab hidden">
+  <div class="card">
+   <h2 style="margin-top:0">Weekly Part Templates</h2>
+   <p class="muted">Save the current week’s songs, Bible reading, scripture, titles, durations and number of parts as a reusable template. Assignments are never copied into a template.</p>
+   <div class="grid2"><div><label>Template name</label><input id="templateName" placeholder="e.g. September Week 2"></div><div><label>Description</label><input id="templateDesc" placeholder="Optional"></div></div>
+   <div class="toolbar"><button class="primary" id="saveTemplateBtn">Save Current Week as Template</button></div>
+  </div>
+  <div class="card"><div id="templateList"></div></div>
+ </section>
+
+ <section id="backupTab" class="tab hidden">
+  <div class="card">
+   <h2 style="margin-top:0">Backup & Restore</h2>
+   <p class="muted">Backups include all weeks, archived schedules, publishers, availability, templates and assignment history. Old v2.x backups are automatically migrated.</p>
+   <div class="toolbar">
+    <button class="primary" id="exportBtn">Export Backup</button>
+    <label class="filelabel">Import Backup<input id="importFile" type="file" accept="application/json" style="display:none"></label>
+   </div>
+  </div>
+  <div class="card">
+   <h2 style="margin-top:0">Online Import & Install</h2>
+   <div id="serverStatus" class="install-note">Checking the online JW.org importer…</div>
+   <div id="installHelp" class="install-note" style="margin-top:10px">When this package is served from HTTPS or localhost, supported browsers can install it to the home screen and use it offline. The JW.org importer uses the included same-origin server endpoint so the browser does not have to scrape JW.org directly.</div>
+  </div>
+ </section>
+
+ <div class="footer-note">S-140 Meeting Scheduler v5.1 • Wotsogoza wording corrected</div>
+</div>
+
+<div id="profileModal" class="modal hidden"><div class="modal-card">
+ <div class="modal-head"><h2 id="profileTitle">Publisher Profile</h2><button class="closebtn" id="closeProfileBtn">×</button></div>
+ <div id="profileBody"></div>
+</div></div>
+
+<div id="templateModal" class="modal hidden"><div class="modal-card">
+ <div class="modal-head"><h2>Load Template</h2><button class="closebtn" id="closeTemplateModalBtn">×</button></div>
+ <div id="templateModalBody"></div>
+</div></div>
+
+<div id="importModal" class="modal hidden"><div class="modal-card">
+ <div class="modal-head"><h2 id="importTitle">Import Meeting Information</h2><button class="closebtn" id="closeImportBtn">×</button></div>
+ <div id="importBody"></div>
+ <div class="toolbar">
+  <button class="primary" id="confirmImportBtn">Create Week & Import</button>
+  <button id="applyImportCurrentBtn">Apply to Current Week</button>
+  <button id="cancelImportBtn">Cancel</button>
+ </div>
+</div></div>
+
+<div id="previewWrap" class="preview-wrap hidden"><div class="preview-card">
+ <div class="modal-head"><h2>PDF Preview</h2><div class="actions"><button class="pdfbtn" id="previewDownloadBtn">Download PDF</button><button id="closePreviewBtn">Close</button></div></div>
+ <iframe id="previewFrame"></iframe>
+</div></div>
+
+<script>
+const SEED=[["Aaron Mzumara", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Amos Mzumara", "brother", ["prayer", "bibleReading", "ministryStudent", "ministryAssistant"]], ["Anastasia Mwandira", "sister", ["ministryStudent", "ministryAssistant"]], ["Beauty Banda", "sister", ["ministryStudent", "ministryAssistant"]], ["Biliat Phiri", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Chanda Mulenga", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Edson Daka", "brother", ["prayer", "bibleReading", "ministryStudent", "ministryAssistant"]], ["Edwin Mwanza", "brother", ["prayer", "bibleReading", "ministryStudent", "ministryAssistant"]], ["George Banda", "brother", ["prayer", "treasuresTalk", "spiritualGems", "bibleReading"]], ["Innocent Phiri", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Isaac Tembo", "brother", ["bibleReading", "ministryStudent", "ministryAssistant"]], ["Joyce Zulu", "sister", ["ministryStudent", "ministryAssistant"]], ["kondwan Mwandira", "brother", ["prayer", "bibleReading", "ministryStudent", "ministryAssistant"]], ["Laston Nyirongo", "brother", ["prayer", "ministryStudent", "ministryAssistant"]], ["Lotti Phiri", "brother", ["prayer", "treasuresTalk", "spiritualGems", "bibleReading"]], ["Mbewe Fransis", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Mbunge Elijah", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Nakiwe Mwanza", "sister", ["ministryStudent", "ministryAssistant"]], ["Nelia Chirwa", "sister", ["ministryStudent", "ministryAssistant"]], ["Pearson Kamanga", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Rosalyn Nkwazi", "sister", ["ministryStudent", "ministryAssistant"]], ["Royd Kalule", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Saulos Phiri", "brother", ["prayer", "treasuresTalk", "spiritualGems", "bibleReading"]], ["Treser Njobvu", "sister", ["ministryStudent", "ministryAssistant"]], ["Victor Banda", "brother", ["bibleReading", "ministryStudent", "ministryAssistant", "cbsReader"]], ["victoria Mbewe", "sister", ["ministryStudent", "ministryAssistant"]]];
+const ROLE_LABELS={chairman:"Chairman",counselor:"Auxiliary Classroom Counselor",prayer:"Prayer",treasuresTalk:"Treasures talk",spiritualGems:"Spiritual Gems",bibleReading:"Bible Reading",ministryStudent:"Field Ministry Student",ministryAssistant:"Field Ministry Assistant",livingTalk:"Living as Christians talk",cbsConductor:"CBS Conductor",cbsReader:"CBS Reader"};
+const BROTHER_ONLY=new Set(["chairman","counselor","prayer","treasuresTalk","spiritualGems","bibleReading","livingTalk","cbsConductor","cbsReader"]);
+const STORAGE_KEY="s140Scheduler";
+const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
+const $=id=>document.getElementById(id);
+function uid(prefix="id"){return prefix+"_"+Date.now()+"_"+Math.random().toString(16).slice(2)}
+function esc(s=""){return String(s).replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;","'":"&#039;"}[m]))}
+function clean(s=""){return String(s||"").replace(/[’‘]/g,"'").replace(/[“”]/g,'"').replace(/[—–]/g,"-").replace(/\s+/g," ").trim()}
+function parseDate(s){if(!s)return null;const d=new Date(s+"T12:00:00");return isNaN(d)?null:d}
+function isoDate(d){return d?d.toISOString().slice(0,10):""}
+function plusDays(iso,n){const d=parseDate(iso)||new Date();d.setDate(d.getDate()+n);return isoDate(d)}
+function weekLabelFromDates(a,b){
+ const s=parseDate(a),e=parseDate(b);if(!s||!e)return "";
+ if(s.getFullYear()===e.getFullYear()&&s.getMonth()===e.getMonth())return `${MONTHS[s.getMonth()]} ${s.getDate()}–${e.getDate()}, ${s.getFullYear()}`;
+ return `${MONTHS[s.getMonth()]} ${s.getDate()} – ${MONTHS[e.getMonth()]} ${e.getDate()}, ${e.getFullYear()}`
+}
+function makeSeed(){
+ return SEED.map((r,i)=>{const eligible={};Object.keys(ROLE_LABELS).forEach(k=>eligible[k]=false);r[2].forEach(k=>eligible[k]=true);return{id:"seed_"+i,name:r[0],gender:r[1],active:true,eligible,availability:[]}})
+}
+function blankMinistry(){return[
+ {id:uid("m"),title:"[Title]",time:"3 min.",type:"demonstration",main:{student:"",assistant:"",filter:"all"},aux:{student:"",assistant:"",filter:"all"}},
+ {id:uid("m"),title:"[Title]",time:"4 min.",type:"demonstration",main:{student:"",assistant:"",filter:"all"},aux:{student:"",assistant:"",filter:"all"}},
+ {id:uid("m"),title:"[Title]",time:"5 min.",type:"demonstration",main:{student:"",assistant:"",filter:"all"},aux:{student:"",assistant:"",filter:"all"}},
+ {id:uid("m"),title:"[Title]",time:"5 min.",type:"talk",main:{student:"",assistant:"",filter:"brother"},aux:{student:"",assistant:"",filter:"brother"}}
+]}
+function blankLiving(){return[{id:uid("l"),title:"[Title]",time:"15 min.",person:""},{id:uid("l"),title:"[Title]",time:"15 min.",person:""}]}
+function blankWeek(start="",end="",label=""){
+ const s=start||isoDate(new Date()),e=end||plusDays(s,6);
+ return{id:uid("w"),startDate:s,endDate:e,label:label||weekLabelFromDates(s,e),archived:false,congregation:"",bibleReading:"",auxEnabled:true,
+ fields:{chairman:"",auxCounselor:"",openingSong:"",openingPrayer:"",openingComments:"1 min.",p1title:"[Title]",p1person:"",p2person:"",p3scripture:"",p3main:"",p3aux:"",livingSong:"",livingNote:"",cbsReference:"",cbsConductor:"",cbsReader:"",concludingComments:"3 min.",closingSong:"",closingPrayer:""},
+ ministry:blankMinistry(),living:blankLiving(),source:null}
+}
+function standardTemplate(){return{id:"tpl_standard",name:"Standard S-140",description:"Blank standard structure",bibleReading:"",fields:{openingSong:"",openingComments:"1 min.",p1title:"[Title]",p3scripture:"",livingSong:"",livingNote:"",cbsReference:"",concludingComments:"3 min.",closingSong:""},ministry:blankMinistry().map(stripMinistryAssignments),living:blankLiving().map(x=>({id:uid("tl"),title:x.title,time:x.time}))}}
+function stripMinistryAssignments(p){return{id:uid("tm"),title:p.title,time:p.time,type:p.type,main:{filter:p.main?.filter||"all"},aux:{filter:p.aux?.filter||"all"}}}
+function migrate(raw){
+ if(raw?.version>=3&&Array.isArray(raw.weeks)){
+   raw.publishers=(raw.publishers||[]).map(p=>({...p,availability:p.availability||[]}));
+   raw.weeks=raw.weeks.map(w=>({...w,source:w.source||null,fields:{...(w.fields||{}),cbsReference:w.fields?.cbsReference||""}}));
+   raw.templates=(raw.templates?.length?raw.templates:[standardTemplate()]).map(t=>({...t,fields:{...(t.fields||{}),cbsReference:t.fields?.cbsReference||""}}));
+   raw.version=4;
+   return raw
+ }
+ const pubs=(raw?.publishers?.length?raw.publishers:makeSeed()).map(p=>({...p,availability:p.availability||[]}));
+ let w=blankWeek();
+ const old=raw?.schedule;
+ if(old){
+  const f=old.fields||{};
+  w.label=f.weekDate||w.label;w.congregation=f.congregation||"";w.bibleReading=f.bibleReading||"";w.auxEnabled=old.auxEnabled!==false;
+  Object.assign(w.fields,{
+   chairman:f.chairman||"",auxCounselor:f.auxCounselor||"",openingSong:f.openingSong||"",openingPrayer:f.openingPrayer||"",openingComments:f.openingComments||"1 min.",
+   p1title:f.p1title||"[Title]",p1person:f.p1person||"",p2person:f.p2person||"",p3scripture:f.p3scripture||"",p3main:f.p3main||"",p3aux:f.p3aux||"",
+   livingSong:f.livingSong||"",livingNote:f.livingNote||"",cbsReference:f.cbsReference||"",cbsConductor:f.cbsConductor||"",cbsReader:f.cbsReader||"",concludingComments:f.concludingComments||"3 min.",closingSong:f.closingSong||"",closingPrayer:f.closingPrayer||""
+  });
+  if(Array.isArray(old.ministry)&&old.ministry.length)w.ministry=old.ministry.map(p=>({id:p.id||uid("m"),title:p.title||"[Title]",time:p.time||"5 min.",type:p.type||"demonstration",main:{student:p.main?.student||"",assistant:p.main?.assistant||"",filter:p.main?.filter||"all"},aux:{student:p.aux?.student||"",assistant:p.aux?.assistant||"",filter:p.aux?.filter||"all"}}));
+  if(Array.isArray(old.living)&&old.living.length)w.living=old.living.map(p=>({id:p.id||uid("l"),title:p.title||"[Title]",time:p.time||"10 min.",person:p.person||""}));
+ }
+ return{version:4,publishers:pubs,weeks:[w],currentWeekId:w.id,templates:[standardTemplate()],history:raw?.history||[]}
+}
+function loadState(){try{const r=localStorage.getItem(STORAGE_KEY);return r?migrate(JSON.parse(r)):migrate(null)}catch(e){return migrate(null)}}
+let state=loadState(),editingPublisherId=null,profilePublisherId=null,deferredInstallPrompt=null;
+function saveState(){state.version=4;localStorage.setItem(STORAGE_KEY,JSON.stringify(state))}
+function currentWeek(){return state.weeks.find(w=>w.id===state.currentWeekId)||state.weeks[0]}
+function currentWeekIndex(){return state.weeks.findIndex(w=>w.id===state.currentWeekId)}
+function pubName(id){return state.publishers.find(p=>p.id===id)?.name||""}
+function pubById(id){return state.publishers.find(p=>p.id===id)}
+function dateOverlap(a1,a2,b1,b2){if(!a1||!a2||!b1||!b2)return false;return a1<=b2&&b1<=a2}
+function availabilityFor(pub,week){return(pub?.availability||[]).filter(a=>dateOverlap(a.start,a.end,week.startDate,week.endDate))}
+function isAvailable(pub,week){return availabilityFor(pub,week).length===0}
+function isEligible(pub,role,week){return !!(pub&&pub.active&&isAvailable(pub,week)&&(!BROTHER_ONLY.has(role)||pub.gender==="brother")&&pub.eligible?.[role])}
+function historyBefore(pubId,week,role=null){
+ const cutoff=week.startDate||"9999-12-31";
+ return state.history
+   .filter(h=>h.publisherId===pubId)
+   .filter(h=>!role || h.role===role)
+   .filter(h=>((h.weekStart||String(h.date||"").slice(0,10))<cutoff||!week.startDate))
+   .sort((a,b)=>String(b.weekStart||b.date||"").localeCompare(String(a.weekStart||a.date||"")))
+}
+function guidance(pubId,week,role){
+ const h=historyBefore(pubId,week,role);
+ if(!h.length)return"never used for this assignment";
+ const lastWeek=h[0].weekStart||String(h[0].date||"").slice(0,10);
+ const d=parseDate(week.startDate),last=parseDate(lastWeek);
+ if(d&&last){
+   const days=Math.max(0,Math.round((d-last)/86400000));
+   const weeks=Math.floor(days/7);
+   return weeks>0?`last used ${weeks} wk${weeks===1?"":"s"} ago`:`used recently`
+ }
+ return`last used: ${h[0].weekLabel||h[0].week||""}`
+}
+function recentUsageInfo(pubId,week,role){
+ const h=historyBefore(pubId,week,role);
+ if(!h.length)return null;
+ const last=h[0];
+ const lastDate=parseDate(last.weekStart||String(last.date||"").slice(0,10));
+ const curDate=parseDate(week.startDate);
+ if(!lastDate||!curDate)return{weeks:null,days:null,entry:last};
+ const diffDays=Math.max(0,Math.round((curDate-lastDate)/86400000));
+ const weeks=Math.floor(diffDays/7);
+ return{weeks,days:diffDays,entry:last}
+}
+function formatRecentWarning(name,info,newLabel){
+ const e=info.entry;
+ const when=info.weeks===0?"recently (this past week)":info.weeks===1?"last week":info.weeks===2?"2 weeks ago":`${info.weeks} weeks ago`;
+ const lastPart=e.part||e.role||"assignment";
+ const lastWeek=e.weekLabel||e.weekStart||"";
+ return `${name} was used ${when}.\n\nLast: ${lastPart} (${lastWeek})\nAssigning now: ${newLabel}\n\nThis person was used ${when}. Continue to use ${name}?`;
+}
+function confirmRecentUsage(pubId,role,newLabel){
+ if(!pubId)return true;
+ const w=currentWeek();
+ // Check role-specific recent usage within 2 weeks
+ const info=recentUsageInfo(pubId,w,role);
+ if(!info)return true;
+ if(info.weeks!==null && info.weeks<=2){
+   const name=pubName(pubId)||"This publisher";
+   return confirm(formatRecentWarning(name,info,newLabel));
+ }
+ return true;
+}
+function confirmRecentUsageGeneral(pubId,newLabel){
+ // Fallback: check ANY role within last 1 week (to catch frequent use across different parts)
+ if(!pubId)return true;
+ const w=currentWeek();
+ const cutoff=w.startDate||"9999-12-31";
+ const all=state.history.filter(h=>h.publisherId===pubId).filter(h=>((h.weekStart||String(h.date||"").slice(0,10))<cutoff||!w.startDate)).sort((a,b)=>String(b.weekStart||b.date||"").localeCompare(String(a.weekStart||a.date||"")));
+ if(!all.length)return true;
+ const last=all[0];
+ const lastDate=parseDate(last.weekStart||String(last.date||"").slice(0,10));
+ const curDate=parseDate(w.startDate);
+ if(!lastDate||!curDate)return true;
+ const days=Math.max(0,Math.round((curDate-lastDate)/86400000));
+ const weeks=Math.floor(days/7);
+ if(weeks<=1){
+   const name=pubName(pubId)||"This publisher";
+   const when=weeks===0?"recently":weeks===1?"last week":"2 weeks ago";
+   // Only warn if role-specific didn't already warn (avoid double)
+   const roleSpecific=recentUsageInfo(pubId,w,last.role);
+   if(roleSpecific && roleSpecific.weeks<=2)return true;
+   return confirm(`${name} was used ${when} for a different assignment.\n\nLast: ${last.part||last.role} (${last.weekLabel||last.weekStart})\nNow: ${newLabel}\n\nContinue to use ${name}?`);
+ }
+ return true;
+}
+
+function eligiblePublishers(role,filter="all",selected="",historyRole=null){
+ const w=currentWeek(),hr=historyRole||role;
+ let arr=state.publishers.filter(p=>isEligible(p,role,w)).filter(p=>filter==="all"||p.gender===filter);
+ arr.sort((a,b)=>{
+   const ah=historyBefore(a.id,w,hr),bh=historyBefore(b.id,w,hr);
+   if(!ah.length&&!bh.length)return a.name.localeCompare(b.name);
+   if(!ah.length)return-1;
+   if(!bh.length)return 1;
+   return String(ah[0].weekStart||ah[0].date||"").localeCompare(String(bh[0].weekStart||bh[0].date||""))||a.name.localeCompare(b.name)
+ });
+ return'<option value="">— Select —</option>'+arr.map(p=>{
+   const ri=recentUsageInfo(p.id,w,hr);
+   const isRecent=ri && ri.weeks!==null && ri.weeks<=2;
+   const warn=isRecent?" ⚠️ USED "+(ri.weeks===0?"RECENTLY":ri.weeks===1?"LAST WEEK":ri.weeks+"W AGO")+" - ":"";
+   return `<option value="${p.id}" ${p.id===selected?"selected":""}>${esc(warn+p.name)} — ${esc(guidance(p.id,w,hr))}</option>`
+ }).join("")
+}
+function firstLivingNumber(w=currentWeek()){return 4+w.ministry.length}
+function cbsNo(w=currentWeek()){return firstLivingNumber(w)+w.living.length}
+function roleNumberFromLivingIndex(i,w=currentWeek()){return firstLivingNumber(w)+i}
+function switchTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.add("hidden"));$(id).classList.remove("hidden");document.querySelectorAll(".tabbtn").forEach(b=>b.classList.toggle("active",b.dataset.tab===id));if(id==="weeksTab")renderWeeks();if(id==="publisherTab")renderPublishers();if(id==="templatesTab")renderTemplates()}
+
+function renderWeekSelector(){
+ const active=state.weeks.filter(w=>!w.archived).sort((a,b)=>(a.startDate||"").localeCompare(b.startDate||""));
+ const cur=currentWeek();
+ weekSelector.innerHTML=active.map(w=>`<option value="${w.id}" ${w.id===cur.id?"selected":""}>${esc(w.label||w.startDate||"Untitled week")}</option>`).join("");
+ if(cur.archived)weekSelector.innerHTML+=`<option value="${cur.id}" selected>${esc(cur.label)} (Archived)</option>`;
+ weekStatus.innerHTML=cur.archived?'<span class="pill archived">Archived</span>':'<span class="pill available">Active</span>';
+ archiveWeekBtn.textContent=cur.archived?"Unarchive":"Archive";
+}
+function restoreWeekToForm(){
+ const w=currentWeek(),f=w.fields;
+ weekLabel.value=w.label||"";weekStart.value=w.startDate||"";weekEnd.value=w.endDate||"";congregation.value=w.congregation||"";bibleReading.value=w.bibleReading||"";auxEnabled.checked=w.auxEnabled!==false;
+ const ids=["chairman","auxCounselor","openingSong","openingPrayer","openingComments","p1title","p1person","p2person","p3scripture","p3main","p3aux","livingSong","livingNote","cbsReference","cbsConductor","cbsReader","concludingComments","closingSong","closingPrayer"];
+ ids.forEach(id=>{if($(id))$(id).value=f[id]??""})
+}
+function collectFormToWeek(){
+ const w=currentWeek(),f=w.fields;
+ w.label=weekLabel.value.trim()||weekLabelFromDates(weekStart.value,weekEnd.value);w.startDate=weekStart.value;w.endDate=weekEnd.value;w.congregation=congregation.value.trim();w.bibleReading=bibleReading.value.trim();w.auxEnabled=auxEnabled.checked;
+ ["chairman","auxCounselor","openingSong","openingPrayer","openingComments","p1title","p1person","p2person","p3scripture","p3main","p3aux","livingSong","livingNote","cbsReference","cbsConductor","cbsReader","concludingComments","closingSong","closingPrayer"].forEach(id=>{f[id]=$(id)?.value??f[id]});
+ collectMinistry();collectLiving();saveState()
+}
+function refreshAssignmentSelects(){
+ const w=currentWeek();
+ document.querySelectorAll(".assignment-select").forEach(s=>{const cur=s.value||w.fields[s.id]||"";s.innerHTML=eligiblePublishers(s.dataset.role,"all",cur);s.value=cur});
+}
+function toggleAux(){
+ const on=auxEnabled.checked;document.querySelectorAll(".aux-only").forEach(x=>x.classList.toggle("hidden",!on));auxCounselorWrap.classList.toggle("hidden",!on);currentWeek().auxEnabled=on
+}
+function renderSchedule(){
+ renderWeekSelector();restoreWeekToForm();renderMinistry();renderLiving();refreshAssignmentSelects();toggleAux();renderConflicts()
+}
+function studentGender(id){return pubById(id)?.gender||""}
+function ministryHallHTML(p,h,label){
+ const talk=p.type==="talk",studentId=p[h].student,studentGen=studentGender(studentId),baseFilter=talk?"brother":(p[h].filter||"all"),assistantFilter=studentGen||baseFilter;
+ return`<div class="hall"><h4>${label}</h4>${talk?'<span class="badge">Talk — brothers only</span>':`<div class="filters"><button class="filter ${baseFilter==="all"?"active":""}" data-hall="${h}" data-filter="all">All</button><button class="filter ${baseFilter==="brother"?"active":""}" data-hall="${h}" data-filter="brother">Brothers</button><button class="filter ${baseFilter==="sister"?"active":""}" data-hall="${h}" data-filter="sister">Sisters</button></div>`}
+ <div class="${talk?"":"grid2"}"><div class="field"><label>${talk?"Wokamba / Speaker":"Wophunzira / Student"}</label><select class="ministry-select" data-hall="${h}" data-kind="student">${eligiblePublishers("ministryStudent",baseFilter,studentId,talk?"ministryTalk":"ministryStudent")}</select></div>
+ ${talk?"":`<div class="field"><label>Wothandiza / Assistant ${studentGen?`(${studentGen==="brother"?"Brother":"Sister"} only)`:""}</label><select class="ministry-select" data-hall="${h}" data-kind="assistant">${eligiblePublishers("ministryAssistant",assistantFilter,p[h].assistant)}</select></div>`}</div></div>`
+}
+function renderMinistry(){
+ const w=currentWeek();ministryParts.innerHTML=w.ministry.map((p,i)=>`<div class="part" data-id="${p.id}" data-i="${i}">
+ <div class="parthead"><h3>${4+i}. <input class="m-title" value="${esc(p.title)}" style="display:inline-block;width:min(470px,70vw)"></h3><div class="row-actions"><input class="m-time" value="${esc(p.time)}" style="width:88px"><select class="m-type" style="width:150px"><option value="demonstration" ${p.type==="demonstration"?"selected":""}>Demonstration</option><option value="talk" ${p.type==="talk"?"selected":""}>Talk</option><option value="other" ${p.type==="other"?"selected":""}>Other</option></select><button class="small danger delete-ministry">Delete</button></div></div>
+ ${ministryHallHTML(p,"main","Holo Yaikulu")}<div class="aux-only">${ministryHallHTML(p,"aux","Kalasi Yowonjezera")}</div></div>`).join("");
+ ministryParts.querySelectorAll(".m-title,.m-time").forEach(x=>x.addEventListener("input",()=>{collectFormToWeek()}));
+ ministryParts.querySelectorAll(".m-type").forEach(x=>x.addEventListener("change",e=>{const p=w.ministry[+e.target.closest(".part").dataset.i];p.type=e.target.value;if(p.type==="talk"){["main","aux"].forEach(h=>{p[h].filter="brother";p[h].assistant=""})}saveState();renderSchedule()}));
+ ministryParts.querySelectorAll(".filter").forEach(b=>b.addEventListener("click",()=>{const p=w.ministry[+b.closest(".part").dataset.i],h=b.dataset.hall;p[h].filter=b.dataset.filter;saveState();renderMinistry();toggleAux()}));
+ ministryParts.querySelectorAll(".ministry-select").forEach(s=>s.addEventListener("change",()=>{
+   const i=+s.closest(".part").dataset.i,p=w.ministry[i],h=s.dataset.hall,k=s.dataset.kind;
+   const previous=p[h][k]||"",next=s.value;
+   const partNo=4+i,hall=hallLabel(h),roleLabel=p.type==="talk"?"Wokamba":k==="assistant"?"Wothandiza":"Wophunzira";
+   const newLabel=`Part ${partNo}: ${p.title||"[Title]"} (${roleLabel})${hall?" — "+hall:""}`;
+   const role=k==="assistant"?"ministryAssistant":p.type==="talk"?"ministryTalk":"ministryStudent";
+   if(next&&next!==previous&&!confirmAdditionalAssignment(next,newLabel)){s.value=previous;return}
+   if(next&&next!==previous&&!confirmRecentUsage(next,role,newLabel)){s.value=previous;return}
+   if(next&&next!==previous&&!confirmRecentUsageGeneral(next,newLabel)){s.value=previous;return}
+   p[h][k]=next;
+   if(k==="student"&&p.type!=="talk"){const g=studentGender(next),a=pubById(p[h].assistant);if(a&&g&&a.gender!==g)p[h].assistant=""}
+   saveState();renderMinistry();toggleAux();renderConflicts()
+ }));
+ ministryParts.querySelectorAll(".delete-ministry").forEach(b=>b.addEventListener("click",()=>{if(w.ministry.length<=1)return alert("Keep at least one field ministry part.");w.ministry.splice(+b.closest(".part").dataset.i,1);saveState();renderSchedule()}))
+}
+function collectMinistry(){const w=currentWeek();document.querySelectorAll("#ministryParts>.part").forEach(c=>{const p=w.ministry[+c.dataset.i];p.title=c.querySelector(".m-title").value;p.time=c.querySelector(".m-time").value;p.type=c.querySelector(".m-type").value})}
+function renderLiving(){
+ const w=currentWeek(),start=firstLivingNumber(w);livingParts.innerHTML=w.living.map((p,i)=>`<div class="part" data-i="${i}"><div class="parthead"><h3>${start+i}. <input class="l-title" value="${esc(p.title)}" style="display:inline-block;width:min(500px,72vw)"></h3><div class="row-actions"><input class="l-time" value="${esc(p.time)}" style="width:90px"><button class="small danger delete-living">Delete</button></div></div><div class="field"><label>Wokamba / Assigned brother</label><select class="living-select">${eligiblePublishers("livingTalk","all",p.person)}</select></div></div>`).join("");
+ cbsNumber.textContent=cbsNo(w);
+ livingParts.querySelectorAll(".l-title,.l-time").forEach(x=>x.addEventListener("input",()=>collectFormToWeek()));
+ livingParts.querySelectorAll(".living-select").forEach(x=>x.addEventListener("change",()=>{
+   const i=+x.closest(".part").dataset.i,p=w.living[i],previous=p.person||"",next=x.value;
+   const label=`Part ${firstLivingNumber(w)+i}: ${p.title||"[Title]"}`;
+   if(next&&next!==previous&&!confirmAdditionalAssignment(next,label)){x.value=previous;return}
+   if(next&&next!==previous&&!confirmRecentUsage(next,"livingTalk",label)){x.value=previous;return}
+   if(next&&next!==previous&&!confirmRecentUsageGeneral(next,label)){x.value=previous;return}
+   p.person=next;saveState();renderConflicts()
+ }));
+ livingParts.querySelectorAll(".delete-living").forEach(b=>b.addEventListener("click",()=>{if(w.living.length<=1)return alert("Keep at least one Living as Christians part.");w.living.splice(+b.closest(".part").dataset.i,1);saveState();renderSchedule()}))
+}
+function collectLiving(){const w=currentWeek();document.querySelectorAll("#livingParts>.part").forEach(c=>{const p=w.living[+c.dataset.i];p.title=c.querySelector(".l-title").value;p.time=c.querySelector(".l-time").value})}
+
+function assignmentRecords(w){
+ const f=w.fields,a=[];const add=(id,partNo,part,role,hall="")=>{if(id)a.push({publisherId:id,partNo,part,role,hall})};
+ add(f.chairman,0,"Cheyamani","chairman");add(f.openingPrayer,0,"Pemphero Loyamba","prayer");add(f.p1person,1,f.p1title||"Part 1","treasuresTalk");add(f.p2person,2,"Kufufuza Cuma Cauzimu","spiritualGems");add(f.p3main,3,"Kuwerenga Baibo","bibleReading","main");if(w.auxEnabled)add(f.p3aux,3,"Kuwerenga Baibo","bibleReading","aux");
+ w.ministry.forEach((p,i)=>{const n=4+i;["main",...(w.auxEnabled?["aux"]:[])].forEach(h=>{add(p[h].student,n,p.title,p.type==="talk"?"ministryTalk":"ministryStudent",h);if(p.type!=="talk")add(p[h].assistant,n,p.title,"ministryAssistant",h)})});
+ w.living.forEach((p,i)=>add(p.person,firstLivingNumber(w)+i,p.title,"livingTalk"));
+ add(f.cbsConductor,cbsNo(w),"Phunzilo la Baibo la Mpingo","cbsConductor");add(f.cbsReader,cbsNo(w),"Phunzilo la Baibo la Mpingo","cbsReader");add(f.closingPrayer,99,"Pemphero Lothela","prayer");
+ return a
+}
+
+function hallLabel(h){return h==="main"?"Holo Yaikulu":h==="aux"?"Kalasi Yowonjezera":""}
+function currentAssignmentDescription(r){
+ if(r.role==="chairman")return"Cheyamani";
+ if(r.part==="Pemphero Loyamba")return"Pemphero Loyamba";
+ if(r.part==="Pemphero Lothela")return"Pemphero Lothela";
+ if(r.role==="cbsConductor")return`Part ${r.partNo}: Phunzilo la Baibo la Mpingo — Wotsogoza`;
+ if(r.role==="cbsReader")return`Part ${r.partNo}: Phunzilo la Baibo la Mpingo — Wowerenga`;
+ const hall=hallLabel(r.hall),where=hall?` — ${hall}`:"";
+ const role=r.role==="ministryAssistant"?"Wothandiza":r.role==="ministryStudent"?"Wophunzira":r.role==="ministryTalk"?"Wokamba":"";
+ const who=role?` (${role})`:"";
+ return r.partNo>0&&r.partNo<99?`Part ${r.partNo}: ${r.part}${who}${where}`:`${r.part}${who}${where}`
+}
+function currentWeekAssignmentsFor(pubId){
+ return assignmentRecords(currentWeek()).filter(r=>r.publisherId===pubId)
+}
+function confirmAdditionalAssignment(pubId,newAssignmentLabel){
+ if(!pubId)return true;
+ const existing=currentWeekAssignmentsFor(pubId);
+ if(!existing.length)return true;
+ const name=pubName(pubId)||"This publisher";
+ const list=existing.map(r=>"• "+currentAssignmentDescription(r)).join("\n");
+ return confirm(
+   `${name} already has ${existing.length===1?"an assignment":"assignments"} this week:\n\n`+
+   `${list}\n\n`+
+   `You are now assigning:\n• ${newAssignmentLabel}\n\n`+
+   `Do you want to proceed with another assignment for ${name}?`
+ )
+}
+function staticAssignmentLabel(select){
+ const w=currentWeek(),f=w.fields;
+ switch(select.id){
+   case"chairman":return"Cheyamani";
+   case"auxCounselor":return"Mlangizi wa Kalasi Yowonjezera";
+   case"openingPrayer":return"Pemphero Loyamba";
+   case"p1person":return`Part 1: ${f.p1title||"Cuma Copezeka M'Mau a Mulungu"}`;
+   case"p2person":return"Part 2: Kufufuza Cuma Cauzimu";
+   case"p3main":return"Part 3: Kuwerenga Baibo — Holo Yaikulu";
+   case"p3aux":return"Part 3: Kuwerenga Baibo — Kalasi Yowonjezera";
+   case"cbsConductor":return`Part ${cbsNo(w)}: Phunzilo la Baibo la Mpingo — Wotsogoza`;
+   case"cbsReader":return`Part ${cbsNo(w)}: Phunzilo la Baibo la Mpingo — Wowerenga`;
+   case"closingPrayer":return"Pemphero Lothela";
+   default:return"another meeting assignment"
+ }
+}
+
+function conflictIssues(w=currentWeek()){
+ const rec=assignmentRecords(w),issues=[];const by={};rec.forEach(r=>(by[r.publisherId]??=[]).push(r));
+ Object.entries(by).forEach(([id,arr])=>{if(arr.length>1)issues.push({level:"warn",text:`${pubName(id)} has ${arr.length} explicit assignments this week.`});
+   const nums=arr.map(x=>x.partNo).filter(n=>n>0&&n<99).sort((a,b)=>a-b);for(let i=1;i<nums.length;i++)if(nums[i]-nums[i-1]<=1)issues.push({level:"warn",text:`${pubName(id)} has assignments in nearby parts ${nums[i-1]} and ${nums[i]}.`})
+ });
+ w.ministry.forEach((p,i)=>["main",...(w.auxEnabled?["aux"]:[])].forEach(h=>{if(p.type!=="talk"&&p[h].student&&p[h].student===p[h].assistant)issues.push({level:"error",text:`Part ${4+i} ${h}: student and assistant are the same person.`});if(p.type!=="talk"&&p[h].student&&p[h].assistant&&studentGender(p[h].student)!==studentGender(p[h].assistant))issues.push({level:"error",text:`Part ${4+i} ${h}: student and assistant must be the same gender.`})}));
+ if(w.auxEnabled)w.ministry.forEach((p,i)=>{["student","assistant"].forEach(k=>{if(p.main[k]&&p.main[k]===p.aux[k])issues.push({level:"error",text:`Part ${4+i}: ${pubName(p.main[k])} is assigned in both Main Hall and Auxiliary Classroom at the same time.`})})});
+ rec.forEach(r=>{const p=pubById(r.publisherId);if(p&&!isAvailable(p,w))issues.push({level:"error",text:`${p.name} is marked unavailable for this week.`})});
+ // NEW: Recent usage warnings (last 2 weeks)
+ rec.forEach(r=>{
+   const info=recentUsageInfo(r.publisherId,w,r.role);
+   if(info && info.weeks!==null && info.weeks<=2){
+     const when=info.weeks===0?"recently":info.weeks===1?"last week":`${info.weeks} weeks ago`;
+     issues.push({level:"warn",text:`⚠️ ${pubName(r.publisherId)} was used ${when} (${info.entry.weekLabel||info.entry.weekStart} - ${info.entry.part}). Consider using someone else or confirm to continue.`});
+   }
+ });
+ return issues
+}
+function renderConflicts(){
+ const issues=conflictIssues();if(!issues.length){conflictBox.innerHTML='<div class="notice ok">No assignment conflicts detected.</div>';return}
+ const err=issues.some(i=>i.level==="error");conflictBox.innerHTML=`<div class="notice ${err?"error":"warn"}"><strong>${err?"Please check:":"Assignment guidance:"}</strong><br>${issues.map(i=>"• "+esc(i.text)).join("<br>")}</div>`
+}
+
+function renderWeeks(){
+ const q=weekSearch.value.trim().toLowerCase(),f=weekFilter.value,sort=weekSort.value;let a=state.weeks.filter(w=>(w.label+" "+w.bibleReading+" "+w.congregation).toLowerCase().includes(q)).filter(w=>f==="all"||(f==="archived"?w.archived:!w.archived));
+ a.sort((x,y)=>sort==="newest"?(y.startDate||"").localeCompare(x.startDate||""):(x.startDate||"").localeCompare(y.startDate||""));
+ weeksList.innerHTML=a.length?a.map(w=>`<div class="week-item"><div><strong>${esc(w.label||"Untitled week")}</strong> ${w.archived?'<span class="pill archived">Archived</span>':'<span class="pill available">Active</span>'}<div class="muted smalltext">${esc(w.bibleReading||"No Bible reading entered")} • ${esc(w.congregation||"No congregation entered")} • Source: ${esc(w.source?.type==="jw.org"?"JW.org":w.source?.type==="pdf"?"PDF":"Manual")}</div></div><div class="row-actions"><button class="small open-week" data-id="${w.id}">Open</button><button class="small dup-week" data-id="${w.id}">Duplicate</button><button class="small pdf-week" data-id="${w.id}">PDF</button><button class="small archive-week" data-id="${w.id}">${w.archived?"Unarchive":"Archive"}</button><button class="small danger delete-week" data-id="${w.id}">Delete</button></div></div>`).join(""):'<div class="empty">No weeks found.</div>';
+ weeksList.querySelectorAll(".open-week").forEach(b=>b.onclick=()=>{state.currentWeekId=b.dataset.id;saveState();renderSchedule();switchTab("scheduleTab")});
+ weeksList.querySelectorAll(".dup-week").forEach(b=>b.onclick=()=>duplicateWeek(b.dataset.id));
+ weeksList.querySelectorAll(".pdf-week").forEach(b=>b.onclick=()=>downloadPdfForWeek(state.weeks.find(w=>w.id===b.dataset.id)));
+ weeksList.querySelectorAll(".archive-week").forEach(b=>b.onclick=()=>{const w=state.weeks.find(x=>x.id===b.dataset.id);w.archived=!w.archived;saveState();renderWeeks();renderWeekSelector()});
+ weeksList.querySelectorAll(".delete-week").forEach(b=>b.onclick=()=>deleteWeek(b.dataset.id))
+}
+function createWeek(){
+ const s=newWeekStart.value,e=newWeekEnd.value||plusDays(s,6);if(!s)return alert("Choose a start date.");let w=blankWeek(s,e,newWeekLabel.value.trim()||weekLabelFromDates(s,e));
+ const tpl=state.templates.find(t=>t.id===newWeekTemplate.value);if(tpl)applyTemplateData(w,tpl);
+ const cur=currentWeek();if(cur?.congregation&&!w.congregation)w.congregation=cur.congregation;
+ state.weeks.push(w);state.currentWeekId=w.id;saveState();renderSchedule();switchTab("scheduleTab")
+}
+function duplicateWeek(id=state.currentWeekId){
+ const src=state.weeks.find(w=>w.id===id);if(!src)return;const s=plusDays(src.startDate,7),e=plusDays(src.endDate,7),w=JSON.parse(JSON.stringify(src));w.id=uid("w");w.startDate=s;w.endDate=e;w.label=weekLabelFromDates(s,e)||src.label+" copy";w.archived=false;
+ clearWeekAssignments(w);state.weeks.push(w);state.currentWeekId=w.id;saveState();renderSchedule();switchTab("scheduleTab")
+}
+function deleteWeek(id){
+ if(state.weeks.length<=1)return alert("Keep at least one week.");const w=state.weeks.find(x=>x.id===id);if(!confirm(`Delete ${w.label}? This does not delete publisher history already finalized.`))return;
+ state.weeks=state.weeks.filter(x=>x.id!==id);if(state.currentWeekId===id)state.currentWeekId=state.weeks[0].id;saveState();renderWeeks();renderSchedule()
+}
+function clearWeekAssignments(w){
+ const f=w.fields;["chairman","auxCounselor","openingPrayer","p1person","p2person","p3main","p3aux","cbsConductor","cbsReader","closingPrayer"].forEach(k=>f[k]="");w.ministry.forEach(p=>["main","aux"].forEach(h=>{p[h].student="";p[h].assistant=""}));w.living.forEach(p=>p.person="")
+}
+
+function renderEligibility(){eligibilityGrid.innerHTML=Object.entries(ROLE_LABELS).map(([k,v])=>`<label style="display:flex;align-items:center;gap:7px;border:1px solid #e2e7e9;border-radius:10px;padding:9px"><input class="elig" value="${k}" type="checkbox" style="width:auto">${v}</label>`).join("")}
+function renderPublishers(){
+ const q=pubSearch.value.trim().toLowerCase(),f=pubFilter.value,w=currentWeek();let a=state.publishers.filter(p=>p.name.toLowerCase().includes(q));if(f==="brother"||f==="sister")a=a.filter(p=>p.gender===f&&p.active);if(f==="inactive")a=a.filter(p=>!p.active);a.sort((x,y)=>x.name.localeCompare(y.name));
+ publisherList.innerHTML=a.length?a.map(p=>`<div class="publisher-item"><div><strong>${esc(p.name)}</strong><div><span class="pill ${p.gender}">${p.gender==="brother"?"Brother":"Sister"}</span><span class="pill">${p.active?"Active":"Inactive"}</span><span class="pill ${isAvailable(p,w)?"available":"unavailable"}">${isAvailable(p,w)?"Available this week":"Unavailable this week"}</span>${Object.keys(p.eligible||{}).filter(k=>p.eligible[k]).slice(0,5).map(k=>`<span class="pill">${esc(ROLE_LABELS[k])}</span>`).join("")}</div></div><div class="row-actions"><button class="small profile-pub" data-id="${p.id}">Profile</button><button class="small edit-pub" data-id="${p.id}">Edit</button><button class="small danger delete-pub" data-id="${p.id}">Delete</button></div></div>`).join(""):'<div class="empty">No publishers found.</div>';
+ publisherList.querySelectorAll(".profile-pub").forEach(b=>b.onclick=()=>openProfile(b.dataset.id));publisherList.querySelectorAll(".edit-pub").forEach(b=>b.onclick=()=>editPublisher(b.dataset.id));publisherList.querySelectorAll(".delete-pub").forEach(b=>b.onclick=()=>deletePublisher(b.dataset.id))
+}
+function resetPublisherForm(){editingPublisherId=null;pubNameInput.value="";pubGender.value="brother";pubActive.value="true";document.querySelectorAll(".elig").forEach(c=>c.checked=false);addPublisherBtn.textContent="Add Publisher";cancelEditBtn.classList.add("hidden")}
+function editPublisher(id){const p=pubById(id);if(!p)return;editingPublisherId=id;pubNameInput.value=p.name;pubGender.value=p.gender;pubActive.value=String(p.active);document.querySelectorAll(".elig").forEach(c=>c.checked=!!p.eligible?.[c.value]);addPublisherBtn.textContent="Save Changes";cancelEditBtn.classList.remove("hidden");window.scrollTo({top:0,behavior:"smooth"})}
+function addPublisher(){const name=pubNameInput.value.trim();if(!name)return alert("Enter a name.");const eligible={};document.querySelectorAll(".elig").forEach(c=>eligible[c.value]=c.checked);const data={name,gender:pubGender.value,active:pubActive.value==="true",eligible};if(editingPublisherId)Object.assign(pubById(editingPublisherId),data);else state.publishers.push({id:uid("p"),...data,availability:[]});saveState();resetPublisherForm();renderPublishers();renderSchedule()}
+function deletePublisher(id){const p=pubById(id);if(p&&confirm(`Delete ${p.name}? Existing history will remain as a record but future dropdowns will no longer include this publisher.`)){state.publishers=state.publishers.filter(x=>x.id!==id);saveState();renderPublishers();renderSchedule()}}
+function profileStats(p){
+ const h=state.history.filter(x=>x.publisherId===p.id).sort((a,b)=>new Date(b.date)-new Date(a.date)),today=isoDate(new Date()),up=[];
+ state.weeks.filter(w=>!w.archived&&(!w.startDate||w.startDate>=today)).forEach(w=>assignmentRecords(w).filter(r=>r.publisherId===p.id).forEach(r=>up.push({...r,week:w})));
+ return{history:h,last:h[0],total:h.length,upcoming:up}
+}
+function openProfile(id){profilePublisherId=id;const p=pubById(id);if(!p)return;const s=profileStats(p),w=currentWeek();profileTitle.textContent=p.name;profileBody.innerHTML=`
+ <div class="statgrid"><div class="stat"><span class="muted">Total finalized assignments</span><strong>${s.total}</strong></div><div class="stat"><span class="muted">Last assignment</span><strong style="font-size:1rem">${esc(s.last?.weekLabel||s.last?.week||"None")}</strong></div><div class="stat"><span class="muted">Upcoming assignments</span><strong>${s.upcoming.length}</strong></div><div class="stat"><span class="muted">Current week</span><strong style="font-size:1rem">${isAvailable(p,w)?"Available":"Unavailable"}</strong></div></div>
+ <h3>Availability / Away Dates</h3>
+ <div class="grid3"><div><label>From</label><input id="availStart" type="date" value="${w.startDate||""}"></div><div><label>To</label><input id="availEnd" type="date" value="${w.endDate||""}"></div><div><label>Reason</label><input id="availReason" placeholder="Away, work, travel..."></div></div>
+ <div class="toolbar"><button class="primary" id="addAvailabilityBtn">Add Unavailable Period</button><button id="unavailableThisWeekBtn">Unavailable This Week</button></div>
+ <div id="availabilityList">${(p.availability||[]).length?(p.availability||[]).map(a=>`<div class="week-item"><div><strong>${esc(a.start)} to ${esc(a.end)}</strong><div class="muted">${esc(a.reason||"Unavailable")}</div></div><button class="small danger remove-avail" data-id="${a.id}">Remove</button></div>`).join(""):'<div class="empty">No unavailable periods recorded.</div>'}</div>
+ <h3>Upcoming Assignments</h3>${s.upcoming.length?s.upcoming.map(r=>`<div class="history-row"><div>${esc(r.week.label)}</div><div>${esc(r.part)}</div><div>${esc(r.hall||r.role)}</div></div>`).join(""):'<div class="empty">No upcoming assignments.</div>'}
+ <h3>Finalized Assignment History</h3>${s.history.length?s.history.slice(0,20).map(r=>`<div class="history-row"><div>${esc(r.weekLabel||r.week||"")}</div><div>${esc(r.part||"")}</div><div>${esc(r.role||"")}</div></div>`).join(""):'<div class="empty">No finalized history yet.</div>'}`;
+ profileModal.classList.remove("hidden");
+ $("addAvailabilityBtn").onclick=()=>addAvailability(false);$("unavailableThisWeekBtn").onclick=()=>addAvailability(true);profileBody.querySelectorAll(".remove-avail").forEach(b=>b.onclick=()=>{p.availability=p.availability.filter(a=>a.id!==b.dataset.id);saveState();openProfile(p.id);renderSchedule();renderPublishers()})
+}
+function addAvailability(currentOnly){
+ const p=pubById(profilePublisherId),w=currentWeek();let s=currentOnly?w.startDate:$("availStart").value,e=currentOnly?w.endDate:$("availEnd").value,r=currentOnly?`Unavailable ${w.label}`:$("availReason").value.trim();if(!s||!e)return alert("Choose both start and end dates.");p.availability??=[];p.availability.push({id:uid("a"),start:s,end:e,reason:r});saveState();openProfile(p.id);renderSchedule();renderPublishers()
+}
+
+function templateFromWeek(w,name,description=""){
+ const f=w.fields;return{id:uid("tpl"),name,description,bibleReading:w.bibleReading,fields:{openingSong:f.openingSong,openingComments:f.openingComments,p1title:f.p1title,p3scripture:f.p3scripture,livingSong:f.livingSong,livingNote:f.livingNote,cbsReference:f.cbsReference||"",concludingComments:f.concludingComments,closingSong:f.closingSong},ministry:w.ministry.map(stripMinistryAssignments),living:w.living.map(x=>({id:uid("tl"),title:x.title,time:x.time}))}
+}
+function applyTemplateData(w,t){
+ w.bibleReading=t.bibleReading||"";Object.assign(w.fields,t.fields||{});w.ministry=(t.ministry||[]).map(p=>({id:uid("m"),title:p.title||"[Title]",time:p.time||"5 min.",type:p.type||"demonstration",main:{student:"",assistant:"",filter:p.main?.filter||"all"},aux:{student:"",assistant:"",filter:p.aux?.filter||"all"}}));w.living=(t.living||[]).map(p=>({id:uid("l"),title:p.title||"[Title]",time:p.time||"10 min.",person:""}));clearWeekAssignments(w)
+}
+function renderTemplates(){
+ templateList.innerHTML=state.templates.length?state.templates.map(t=>`<div class="template-item"><div><strong>${esc(t.name)}</strong><div class="muted smalltext">${esc(t.description||"")} • ${t.ministry?.length||0} ministry parts • ${t.living?.length||0} living parts</div></div><div class="row-actions"><button class="small apply-template" data-id="${t.id}">Apply to Current Week</button><button class="small new-from-template" data-id="${t.id}">New Week</button>${t.id!=="tpl_standard"?`<button class="small danger delete-template" data-id="${t.id}">Delete</button>`:""}</div></div>`).join(""):'<div class="empty">No templates.</div>';
+ templateList.querySelectorAll(".apply-template").forEach(b=>b.onclick=()=>{const t=state.templates.find(x=>x.id===b.dataset.id);if(confirm(`Apply "${t.name}" to ${currentWeek().label}? Existing part titles and assignments will be replaced.`)){applyTemplateData(currentWeek(),t);saveState();renderSchedule();switchTab("scheduleTab")}});
+ templateList.querySelectorAll(".new-from-template").forEach(b=>b.onclick=()=>{newWeekTemplate.value=b.dataset.id;switchTab("weeksTab");newWeekStart.focus()});
+ templateList.querySelectorAll(".delete-template").forEach(b=>b.onclick=()=>{if(confirm("Delete this template?")){state.templates=state.templates.filter(t=>t.id!==b.dataset.id);saveState();renderTemplates();renderTemplateSelectors()}})
+}
+function saveCurrentAsTemplate(){const n=templateName.value.trim();if(!n)return alert("Enter a template name.");state.templates.push(templateFromWeek(currentWeek(),n,templateDesc.value.trim()));templateName.value="";templateDesc.value="";saveState();renderTemplates();renderTemplateSelectors()}
+function renderTemplateSelectors(){newWeekTemplate.innerHTML=state.templates.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join("")}
+function openTemplateModal(){templateModalBody.innerHTML=state.templates.map(t=>`<div class="template-item"><div><strong>${esc(t.name)}</strong><div class="muted">${esc(t.description||"")}</div></div><button class="small choose-template" data-id="${t.id}">Load</button></div>`).join("");templateModal.classList.remove("hidden");templateModalBody.querySelectorAll(".choose-template").forEach(b=>b.onclick=()=>{const t=state.templates.find(x=>x.id===b.dataset.id);if(confirm(`Load "${t.name}" into the current week? Existing part titles and assignments will be replaced.`)){applyTemplateData(currentWeek(),t);saveState();templateModal.classList.add("hidden");renderSchedule()}})}
+
+
+let pendingImport=null;
+let pendingImportMode="new";
+
+function issueSlugForDate(startIso){
+ const d=parseDate(startIso);if(!d)throw new Error("Choose a valid week start date.");
+ const m=d.getMonth(),pairStart=m%2===0?m:m-1;
+ return `${MONTHS[pairStart].toLowerCase()}-${MONTHS[pairStart+1].toLowerCase()}-${d.getFullYear()}-mwb`
+}
+function mondayOf(iso){
+ const d=parseDate(iso);if(!d)return iso;
+ const day=d.getDay(),delta=(day+6)%7;d.setDate(d.getDate()-delta);return isoDate(d)
+}
+async function fetchOfficialHtml(url){
+ let directErr=null;
+ try{
+   const r=await fetch(url,{mode:"cors",credentials:"omit"});
+   if(r.ok)return await r.text();
+   directErr=new Error(`JW.org returned ${r.status}`)
+ }catch(e){directErr=e}
+ try{
+   const r=await fetch(`/api/jw-proxy?url=${encodeURIComponent(url)}`);
+   if(!r.ok){const msg=await r.text();throw new Error(msg||`Importer returned ${r.status}`)}
+   return await r.text()
+ }catch(e){
+   if(location.protocol==="file:")throw new Error("You opened the standalone HTML file. For Fetch from JW.org, extract the v4.8 ZIP and double-click START_S140_ONLINE.bat. It will open the same app in online mode automatically. PDF import can still work from the standalone file.");
+   throw new Error(`Could not reach the official JW.org page. ${e.message||directErr?.message||""}`)
+ }
+}
+function startDateFromLabel(text,year){
+ text=clean(text);for(let m=0;m<MONTHS.length;m++){const re=new RegExp(`${MONTHS[m]}\\s+(\\d{1,2})`,"i"),q=text.match(re);if(q)return `${year}-${String(m+1).padStart(2,"0")}-${String(+q[1]).padStart(2,"0")}`}
+ return""
+}
+async function findOfficialWeekPage(startIso){
+ const monday=mondayOf(startIso),d=parseDate(monday),year=d.getFullYear(),issue=`https://www.jw.org/nya/laibulale/kabuku-ka-misonkhano-mboni-za-yehova/${issueSlugForDate(monday)}/`;
+ const issueHtml=await fetchOfficialHtml(issue),doc=new DOMParser().parseFromString(issueHtml,"text/html");
+ const links=[...doc.querySelectorAll("a[href]")].map(a=>({href:new URL(a.getAttribute("href"),issue).href,text:clean(a.textContent)}))
+   .filter(a=>a.href.includes("Ndandanda-ya-Msonkhano-wa-Umoyo-ndi-Utumiki"));
+ let hit=links.find(a=>startDateFromLabel(a.text||decodeURIComponent(a.href),year)===monday);
+ if(!hit){
+   const month=MONTHS[d.getMonth()],day=d.getDate();
+   hit=links.find(a=>a.href.includes(`-${month}-${day}-`))
+ }
+ if(!hit)throw new Error(`I found the official ${MONTHS[d.getMonth()]}–${MONTHS[(d.getMonth()%2===0?d.getMonth()+1:d.getMonth())]} workbook issue, but I could not identify the week beginning ${monday}.`);
+ return hit.href
+}
+function normalizeMeetingLines(raw){
+ return String(raw||"").replace(/\u00a0/g," ").replace(/[\u200B-\u200D\uFEFF]/g,"").replace(/\r/g,"")
+  .split("\n").map(x=>clean(x)).filter(Boolean)
+}
+function compactMeetingText(s){
+ return String(s||"")
+   .normalize("NFKD")
+   .toLowerCase()
+   .replace(/[\u2010\u2011\u2012\u2013\u2014\u2212]/g,"-")
+   .replace(/[’‘`´']/g,"")
+   .replace(/[^a-z0-9]+/g,"")
+}
+function findSectionWindow(lines,needles){
+ for(let i=0;i<lines.length;i++){
+   let joined="";
+   for(let span=0;span<4 && i+span<lines.length;span++){
+     joined+=lines[i+span]+" ";
+     const key=compactMeetingText(joined);
+     if(needles.some(n=>key.includes(n)))return i
+   }
+ }
+ return-1
+}
+function headingMatch(line){
+ const q=String(line||"").match(/^\s*(\d+)\s*[\.\)\-:]\s*(.+?)\s*$/);
+ return q?{num:+q[1],title:clean(q[2])}:null
+}
+function durationFromNearby(lines,i){
+ for(let j=i+1;j<Math.min(lines.length,i+8);j++){
+   const m=lines[j].match(/(?:\(|\b)Mph\.\s*(\d+)\s*(?:\)|\b)/i);
+   if(m)return `${m[1]} min.`
+ }
+ return""
+}
+function detailsFromNearby(lines,i){
+ let out=[];
+ for(let j=i+1;j<Math.min(lines.length,i+10);j++){
+   if(headingMatch(lines[j])||/^(CUMA|CITANI|UMOYO)\b/i.test(lines[j])||/^Mau Othela\b/i.test(lines[j])||/^Nyimbo\s*\d+/i.test(lines[j]))break;
+   out.push(lines[j])
+ }
+ return out.join(" ")
+}
+function parseMeetingText(raw,startIso){
+ const lines=normalizeMeetingLines(raw),monday=mondayOf(startIso),d=parseDate(monday),expectedMonth=MONTHS[d.getMonth()],expectedDay=d.getDate();
+ let start=lines.findIndex(x=>new RegExp(`^${expectedMonth}\\s*${expectedDay}(?:\\D|$)`,"i").test(x));
+ if(start<0)start=lines.findIndex(x=>compactMeetingText(x).includes(`${expectedMonth.toLowerCase()}${expectedDay}`));
+ if(start<0)start=0;
+ const tail=lines.slice(start),warnings=[];
+
+ let idxTre=findSectionWindow(tail,["cumacopezekammaumulungu","cumacopezekammawumulungu","cumacopezekammauamulungu"]);
+ let idxMin=findSectionWindow(tail,["citanikhamapaulaliki"]);
+ let idxLiv=findSectionWindow(tail,["umoyowathuwacikhristu","umoyowathuwachikhristu"]);
+
+ const headings=[];
+ tail.forEach((x,i)=>{
+   const q=headingMatch(x);
+   if(q)headings.push({i,num:q.num,title:q.title,time:durationFromNearby(tail,i),details:detailsFromNearby(tail,i)})
+ });
+
+ if(idxTre<0){
+   const h1=headings.find(h=>h.num===1);
+   if(h1){idxTre=Math.max(0,h1.i-1);warnings.push("The Treasures heading was fragmented in the PDF, so I identified the section from Part 1.")}
+ }
+ if(idxMin<0){
+   const h4=headings.find(h=>h.num===4);
+   if(h4){idxMin=Math.max(idxTre+1,h4.i-1);warnings.push("The Field Ministry heading was fragmented in the PDF, so I identified the section from Part 4.")}
+ }
+ if(idxLiv<0&&idxMin>=0){
+   let songLine=-1;
+   for(let i=idxMin+1;i<tail.length;i++){
+     if(/^Nyimbo\s*\d+/i.test(tail[i])||/\bNyimbo\s*\d+\b/i.test(tail[i])){songLine=i;break}
+   }
+   if(songLine>=0){idxLiv=songLine;warnings.push("The Living as Christians heading was fragmented in the PDF, so I identified the section from its opening song.")}
+ }
+ if(idxLiv<0){
+   const cbs=headings.find(h=>/Phunzilo la Baibo la Mpingo/i.test(h.title));
+   if(cbs){
+     const before=headings.filter(h=>h.i>idxMin&&h.i<cbs.i);
+     if(before.length){
+       const likely=before[Math.max(0,before.length-2)];
+       idxLiv=Math.max(idxMin+1,likely.i-1);
+       warnings.push("The Living as Christians heading was not extractable, so I inferred its boundary from the later numbered parts.")
+     }
+   }
+ }
+ if(idxTre<0||idxMin<0||idxLiv<0){
+   const found=headings.map(h=>`${h.num}. ${h.title}`).slice(0,14);
+   throw new Error(`I found the selected week, but this PDF split the meeting headings in a way I still could not safely reconstruct.${found.length?`\n\nNumbered parts I could read:\n• ${found.join("\n• ")}`:""}\n\nIf this continues, upload the actual workbook PDF here and I can tune the parser to that exact file.`)
+ }
+
+ const firstBlock=tail.slice(0,idxTre);
+ let bibleReading="";
+ for(const x of firstBlock){
+   if(/[A-ZÀ-Ž]/.test(x)&&/\d/.test(x)&&x===x.toUpperCase()&&!/^(SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER|JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST)/.test(x)){bibleReading=x;break}
+ }
+
+ const openingText=firstBlock.join(" | ");
+ // Extract each opening item separately. This is more robust than requiring the
+ // exact phrase "Nyimbo ... ndi Pemphelo/Pemphero" to survive HTML/PDF extraction.
+ const openingSongMatch=openingText.match(/Nyimbo\s*(\d+)/i);
+ const openingCommentsMatch=openingText.match(/Mau Oyamba\s*(?:\(|\b)?\s*Mph\.\s*(\d+)/i);
+
+ const closeText=tail.slice(idxLiv).join(" | ");
+ const closingCommentsMatch=closeText.match(/Mau Othela\s*(?:\(|\b)?\s*Mph\.\s*(\d+)/i);
+ const closingSongMatch=closeText.match(/Nyimbo\s*(\d+)\s+ndi\s+(?:Pemphelo|Pemphero)/i);
+ const livingSongMatch=tail.slice(idxLiv,Math.min(tail.length,idxLiv+14)).join(" | ").match(/Nyimbo\s*(\d+)/i);
+
+ const p1=headings.find(h=>h.num===1&&h.i>=idxTre&&h.i<idxMin);
+ const p3=headings.find(h=>h.num===3&&h.i>=idxTre&&h.i<idxMin);
+ let scripture="";
+ if(p3){
+   // Handles both "(Mph. 4) Yer. ..." and "(Mph. 4.) Yer. ...".
+   let q=p3.details.match(/Mph\.\s*\d+\s*\.?\s*\)?\s*([^()]+?)(?=\s*\(|$)/i);
+   if(q)scripture=clean(q[1]);
+   // Fallback: directly recognise a scripture reference such as "Yer. 38:1-13".
+   if(!scripture){
+     q=p3.details.match(/([A-ZÀ-Ž][A-Za-zÀ-ž.]{1,12}\s+\d+\s*:\s*[\d,;\-–—\s]+)/);
+     if(q)scripture=clean(q[1])
+   }
+ }
+
+ // Numbering is authoritative: parts 1-3 are Treasures, field-ministry parts
+ // begin at 4, and Living as Christians begins immediately after its opening song.
+ let livingStartNum=null;
+ const livingSongLineIndex=tail.findIndex((x,i)=>i>idxMin&&/^Nyimbo\s*\d+/i.test(x));
+ if(livingSongLineIndex>=0){
+   const firstAfterSong=headings.find(h=>h.i>livingSongLineIndex);
+   if(firstAfterSong)livingStartNum=firstAfterSong.num
+ }
+ const ministry=headings
+   .filter(h=>h.num>=4 && (livingStartNum==null || h.num<livingStartNum))
+   .map(h=>({sourceNumber:h.num,title:h.title,time:h.time||"5 min.",type:/\bNkhani\b|\bTalk\b/i.test(h.title)?"talk":"demonstration"}));
+
+ const livingAll=headings.filter(h=>livingStartNum!=null?h.num>=livingStartNum:h.i>idxLiv);
+ const cbs=livingAll.find(h=>/Phunzilo la Baibo la Mpingo/i.test(h.title));
+ const living=livingAll.filter(h=>h!==cbs).map(h=>({title:h.title,time:h.time||"10 min."}));
+ let cbsReference="";
+ if(cbs){
+   let q=cbs.details.match(/Mph\.\s*\d+\s*\.?\s*\)?\s*(.+)$/i);
+   if(q){
+     cbsReference=clean(q[1])
+       .replace(/\s+Mau Othela.*$/i,"")
+       .replace(/\s+Nyimbo\s+\d+.*$/i,"")
+       .replace(/\s+(Yakumbuyo|Yotsatila).*$/i,"")
+   }
+ }
+
+ const weekLine=tail.find(x=>new RegExp(`^${expectedMonth}\\s*${expectedDay}`,"i").test(x))||weekLabelFromDates(monday,plusDays(monday,6));
+ return{
+   weekLabel:weekLine.includes(String(d.getFullYear()))?weekLine:`${weekLine}, ${d.getFullYear()}`,
+   startDate:monday,endDate:plusDays(monday,6),bibleReading,
+   openingSong:openingSongMatch?.[1]||"",openingComments:openingCommentsMatch?.[1]?`${openingCommentsMatch[1]} min.`:"1 min.",
+   p1title:p1?.title||"[Title]",p3scripture:scripture,
+   ministry,livingSong:livingSongMatch?.[1]||"",living,
+   cbsReference,
+   concludingComments:closingCommentsMatch?.[1]?`${closingCommentsMatch[1]} min.`:"3 min.",closingSong:closingSongMatch?.[1]||"",
+   parseWarnings:warnings
+ }
+}
+function headingDetailsElementText(h){
+ let out=[];
+ for(let el=h.nextElementSibling;el;el=el.nextElementSibling){
+   if(/^H[123]$/.test(el.tagName))break;
+   const t=clean(el.innerText||el.textContent||"");
+   if(t)out.push(t)
+ }
+ return out.join(" ")
+}
+function sectionKey(s){return compactMeetingText(s)}
+function parseOfficialJwHtml(doc,startIso){
+ const monday=mondayOf(startIso),d=parseDate(monday),month=MONTHS[d.getMonth()],day=d.getDate(),warnings=[];
+ const heads=[...doc.querySelectorAll("h1,h2,h3")].map((el,i)=>({el,i,tag:el.tagName,text:clean(el.innerText||el.textContent||"")}));
+ const weekHead=heads.find(h=>h.tag==="H1"&&new RegExp(`${month}\\s*${day}(?:\\D|$)`,"i").test(h.text))||heads.find(h=>h.tag==="H1"&&compactMeetingText(h.text).includes(`${month.toLowerCase()}${day}`));
+ if(!weekHead)throw new Error(`The official JW.org page loaded, but I could not find the ${month} ${day} week heading.`);
+ const afterWeek=heads.filter(h=>h.i>weekHead.i);
+ const readingHead=afterWeek.find(h=>h.tag==="H2"&&!sectionKey(h.text).includes("cumacopezeka")&&!sectionKey(h.text).includes("citanikhama")&&!sectionKey(h.text).includes("umoyowathu"));
+ const bibleReading=readingHead?.text||"";
+ const treasureHead=afterWeek.find(h=>h.tag==="H2"&&sectionKey(h.text).includes("cumacopezeka"));
+ const ministryHead=afterWeek.find(h=>h.tag==="H2"&&sectionKey(h.text).includes("citanikhamapaulaliki"));
+ const livingHead=afterWeek.find(h=>h.tag==="H2"&&sectionKey(h.text).includes("umoyowathu")&&sectionKey(h.text).includes("cikhristu"));
+ if(!treasureHead||!ministryHead||!livingHead)throw new Error("The official JW.org page loaded, but its meeting section headings were not recognized.");
+ const openingHeads=heads.filter(h=>h.tag==="H3"&&h.i>weekHead.i&&h.i<treasureHead.i);
+ const openingText=openingHeads.map(h=>h.text).join(" | ");
+ const openingSong=(openingText.match(/Nyimbo\s*(\d+)/i)||[])[1]||"";
+ const openingMph=(openingText.match(/Mau Oyamba.*?Mph\.\s*(\d+)/i)||[])[1]||"1";
+ function numberedBetween(a,b){
+   return heads.filter(h=>h.tag==="H3"&&h.i>a.i&&h.i<b.i).map(h=>{
+     const q=h.text.match(/^\s*(\d+)\s*\.\s*(.+)$/);
+     if(!q)return null;
+     return{num:+q[1],title:clean(q[2]),details:headingDetailsElementText(h.el)}
+   }).filter(Boolean)
+ }
+ const treasureParts=numberedBetween(treasureHead,ministryHead);
+ const ministryPartsRaw=numberedBetween(ministryHead,livingHead).filter(p=>p.num>=4);
+ const p1=treasureParts.find(p=>p.num===1),p3=treasureParts.find(p=>p.num===3);
+ let scripture="";
+ if(p3){
+   let q=p3.details.match(/Mph\.\s*\d+\s*\.?\s*\)?\s*([^()]+?)(?=\s*\(|$)/i);
+   if(q)scripture=clean(q[1]);
+   if(!scripture){q=p3.details.match(/([A-ZÀ-Ž][A-Za-zÀ-ž.]{1,12}\s+\d+\s*:\s*[\d,;\-–—\s]+)/);if(q)scripture=clean(q[1])}
+ }
+ const ministry=ministryPartsRaw.filter(p=>p.num>=4).map(p=>({sourceNumber:p.num,title:p.title,time:((p.details.match(/Mph\.\s*(\d+)/i)||[])[1]||"5")+" min.",type:/\bNkhani\b|\bTalk\b/i.test(p.title)?"talk":"demonstration"}));
+ const livingHeads=heads.filter(h=>h.tag==="H3"&&h.i>livingHead.i);
+ let livingSong="",closingSong="",concludingComments="3 min.";
+ const livingSongHead=livingHeads.find(h=>/^Nyimbo\s*\d+/i.test(h.text));
+ if(livingSongHead)livingSong=(livingSongHead.text.match(/Nyimbo\s*(\d+)/i)||[])[1]||"";
+ const closingHead=livingHeads.find(h=>/Mau Othela/i.test(h.text));
+ if(closingHead){
+   const m=closingHead.text.match(/Mau Othela.*?Mph\.\s*(\d+)/i);if(m)concludingComments=`${m[1]} min.`;
+   const s=closingHead.text.match(/Nyimbo\s*(\d+)/i);if(s)closingSong=s[1]
+ }
+ const numberedLiving=livingHeads.map(h=>{const q=h.text.match(/^\s*(\d+)\s*\.\s*(.+)$/);return q?{num:+q[1],title:clean(q[2]),details:headingDetailsElementText(h.el)}:null}).filter(Boolean);
+ const cbs=numberedLiving.find(p=>/Phunzilo la Baibo la Mpingo/i.test(p.title));
+ const living=numberedLiving.filter(p=>p!==cbs).map(p=>({sourceNumber:p.num,title:p.title,time:(((p.details.match(/Mph\.\s*(\d+)/i)||[])[1])||"10")+" min."}));
+ let cbsReference="";
+ if(cbs){
+   let q=cbs.details.match(/Mph\.\s*\d+\s*\.?\s*\)?\s*(.+)$/i);
+   if(q)cbsReference=clean(q[1]).replace(/\s+Mau Othela.*$/i,"").replace(/\s+Nyimbo\s+\d+.*$/i,"")
+ }
+ const weekLabel=weekHead.text.includes(String(d.getFullYear()))?weekHead.text:`${weekHead.text}, ${d.getFullYear()}`;
+ return{weekLabel,startDate:monday,endDate:plusDays(monday,6),bibleReading,openingSong,openingComments:`${openingMph} min.`,p1title:p1?.title||"[Title]",p3scripture:scripture,ministry,livingSong,living,cbsReference,concludingComments,closingSong,parseWarnings:warnings}
+}
+
+function directOpeningSongFromOfficialText(raw){
+ const s=String(raw||"").replace(/\u00a0/g," ");
+ let m=s.match(/Nyimbo\s*(?:Na\.\s*)?(\d+)\s+ndi\s+(?:Pemphelo|Pemphero)\s*(?:\||\n|\r)/i);
+ if(!m)m=s.match(/Nyimbo\s*(?:Na\.\s*)?(\d+)[\s\S]{0,80}?Mau Oyamba/i);
+ return m?.[1]||""
+}
+function directOpeningCommentsFromOfficialText(raw){
+ const s=String(raw||"").replace(/\u00a0/g," ");
+ const m=s.match(/Mau Oyamba\s*\(\s*Mph\.\s*(\d+)\s*\)/i);
+ return m?`${m[1]} min.`:""
+}
+function directBibleReadingScriptureFromOfficialText(raw){
+ const s=String(raw||"").replace(/\u00a0/g," ").replace(/[\u200B-\u200D\uFEFF]/g,"");
+ // Anchor on the actual numbered Bible Reading heading, then inspect only the
+ // short text immediately following it. This avoids picking a scripture from
+ // another meeting part.
+ let m=s.match(/3\.\s*(?:Kuwelenga|Kuwerenga)\s+Baibo[\s\S]{0,220}?Mph\.\s*4\s*\.?\s*\)?\s*([A-ZÀ-Ž][A-Za-zÀ-ž.]{1,14}\s+\d+\s*:\s*[\d,;\-–—\s]+)/i);
+ if(m)return clean(m[1]);
+ m=s.match(/3\.\s*(?:Kuwelenga|Kuwerenga)\s+Baibo[\s\S]{0,250}?([A-ZÀ-Ž][A-Za-zÀ-ž.]{1,14}\s+\d+\s*:\s*\d+(?:\s*[\-–—]\s*\d+)?)/i);
+ return m?clean(m[1]):""
+}
+function directClosingSongFromOfficialText(raw){
+ const s=String(raw||"").replace(/\u00a0/g," ");
+ const matches=[...s.matchAll(/Mau Othela[\s\S]{0,140}?Nyimbo\s*(\d+)\s+ndi\s+(?:Pemphelo|Pemphero)/gi)];
+ return matches.length?matches[matches.length-1][1]:""
+}
+function directLivingSongFromOfficialText(raw){
+ const lines=normalizeMeetingLines(raw);
+ const liv=findSectionWindow(lines,["umoyowathuwacikhristu","umoyowathuwachikhristu"]);
+ if(liv<0)return"";
+ for(let i=liv+1;i<Math.min(lines.length,liv+12);i++){
+   const m=lines[i].match(/Nyimbo\s*(\d+)/i);
+   if(m)return m[1]
+ }
+ return""
+}
+function directCbsReferenceFromOfficialText(raw){
+ const s=String(raw||"").replace(/\u00a0/g," ");
+ const m=s.match(/Phunzilo la Baibo la Mpingo[\s\S]{0,160}?Mph\.\s*30\s*\.?\s*\)?\s*([^\n\r|]+?)(?=\s+Mau Othela|\s+Nyimbo\s+\d+|\r?\n|$)/i);
+ return m?clean(m[1]):""
+}
+function looksLikeBibleReadingLeakedIntoMinistry(data){
+ if(!data?.ministry?.length)return false;
+ const first=data.ministry[0];
+ return first.sourceNumber===3 || /^(?:Kuwelenga|Kuwerenga)\s+Baibo$/i.test(clean(first.title||""))
+}
+function mergeOfficialParsers(structured,textData,raw){
+ const out={...(structured||{})};
+ const fill=(k,v)=>{if((out[k]==null||out[k]==="")&&v!=null&&v!=="")out[k]=v};
+
+ // Direct anchors from the official page are the most reliable for these
+ // fields, because they are short, uniquely labelled and independent of HTML tags.
+ const directOpening=directOpeningSongFromOfficialText(raw);
+ const directOpeningComments=directOpeningCommentsFromOfficialText(raw);
+ const directScripture=directBibleReadingScriptureFromOfficialText(raw);
+ const directLiving=directLivingSongFromOfficialText(raw);
+ const directClosing=directClosingSongFromOfficialText(raw);
+ const directCbs=directCbsReferenceFromOfficialText(raw);
+
+ if(directOpening)out.openingSong=directOpening;
+ else fill("openingSong",textData?.openingSong);
+
+ if(directOpeningComments)out.openingComments=directOpeningComments;
+ else fill("openingComments",textData?.openingComments);
+
+ if(directScripture)out.p3scripture=directScripture;
+ else fill("p3scripture",textData?.p3scripture);
+
+ if(directLiving)out.livingSong=directLiving;
+ else fill("livingSong",textData?.livingSong);
+
+ if(directClosing)out.closingSong=directClosing;
+ else fill("closingSong",textData?.closingSong);
+
+ if(directCbs)out.cbsReference=directCbs;
+ else fill("cbsReference",textData?.cbsReference);
+
+ ["weekLabel","startDate","endDate","bibleReading","p1title","concludingComments"].forEach(k=>fill(k,textData?.[k]));
+
+ // If the structured DOM parser crosses a JW.org container boundary, Part 3
+ // can incorrectly appear as the first field-ministry item. In that case the
+ // line-based parser is authoritative.
+ if(!out.ministry?.length || looksLikeBibleReadingLeakedIntoMinistry(out)){
+   if(textData?.ministry?.length)out.ministry=textData.ministry
+ }
+ // Never keep Bible Reading inside the field-ministry array.
+ if(out.ministry?.length){
+   out.ministry=out.ministry.filter(p=>(p.sourceNumber==null||p.sourceNumber>=4) && !/^(?:Kuwelenga|Kuwerenga)\s+Baibo$/i.test(clean(p.title||"")))
+ }
+
+ if(!out.living?.length && textData?.living?.length)out.living=textData.living;
+
+ // Clean a CBS reference even if one parser accidentally appended closing items.
+ if(out.cbsReference){
+   out.cbsReference=clean(out.cbsReference)
+     .replace(/\s+Mau Othela.*$/i,"")
+     .replace(/\s+\|\s*Nyimbo\s+\d+.*$/i,"")
+     .replace(/\s+Nyimbo\s+\d+.*$/i,"")
+ }
+
+ const warnings=[...(structured?.parseWarnings||[]),...(textData?.parseWarnings||[])];
+ if(directOpening && structured?.openingSong!==directOpening)warnings.push("Opening song was confirmed from the official page text.");
+ if(directScripture && structured?.p3scripture!==directScripture)warnings.push("Bible Reading scripture was confirmed from the numbered Part 3 text.");
+ if(looksLikeBibleReadingLeakedIntoMinistry(structured))warnings.push("Part 3 was removed from Field Ministry and the official section numbering was restored.");
+ out.parseWarnings=[...new Set(warnings)];
+ return out
+}
+
+async function fetchWeekFromJw(startIso){
+ const pageUrl=await findOfficialWeekPage(startIso),html=await fetchOfficialHtml(pageUrl),doc=new DOMParser().parseFromString(html,"text/html");
+ const raw=doc.body?.innerText||doc.documentElement?.textContent||"";
+ let structured=null,textData=null;
+
+ try{
+   structured=parseOfficialJwHtml(doc,startIso)
+ }catch(e){
+   console.warn("Structured JW.org parser failed.",e)
+ }
+
+ try{
+   textData=parseMeetingText(raw,startIso)
+ }catch(e){
+   console.warn("JW.org text parser failed.",e)
+ }
+
+ if(!structured&&!textData)throw new Error("The official JW.org page loaded, but the meeting information could not be parsed.");
+
+ const data=mergeOfficialParsers(structured,textData,raw);
+ data.source={type:"jw.org",url:pageUrl,importedAt:new Date().toISOString()};
+ return data
+}
+function dataToPreviewHtml(data){
+ const miss=[];if(!data.bibleReading)miss.push("weekly Bible reading");if(!data.openingSong)miss.push("opening song");if(!data.p1title||data.p1title==="[Title]")miss.push("Part 1 title");if(!data.p3scripture)miss.push("Bible Reading scripture");if(!data.ministry?.length)miss.push("field-ministry parts");if(!data.living?.length)miss.push("Living as Christians parts");if(!data.closingSong)miss.push("closing song");
+ const parserWarnings=(data.parseWarnings||[]).map(x=>esc(x));
+ return `${parserWarnings.length?`<div class="notice warn"><strong>Parser notes:</strong><br>${parserWarnings.map(x=>"• "+x).join("<br>")}</div>`:""}${miss.length?`<div class="notice warn"><strong>Please check:</strong> the importer could not confidently find ${esc(miss.join(", "))}.</div>`:"<div class=\"notice ok\"><strong>Import check:</strong> the main weekly fields were recognised.</div>"}
+ <div class="grid2">
+  <div><h3>${esc(data.weekLabel||"Selected week")}</h3><p><strong>Weekly Bible reading:</strong> ${esc(data.bibleReading||"—")}</p><p><strong>Opening:</strong> Nyimbo ${esc(data.openingSong||"—")} • Mau Oyamba ${esc(data.openingComments||"—")}</p><p><strong>Part 1:</strong> ${esc(data.p1title||"—")}</p><p><strong>Kuwerenga Baibo:</strong> ${esc(data.p3scripture||"—")}</p></div>
+  <div><p><strong>Living song:</strong> ${esc(data.livingSong||"—")}</p><p><strong>CBS:</strong> ${esc(data.cbsReference||"—")}</p><p><strong>Closing:</strong> ${esc(data.concludingComments||"—")} • Nyimbo ${esc(data.closingSong||"—")}</p><p><strong>Source:</strong> ${data.source?.type==="jw.org"?`<a href="${esc(data.source.url)}" target="_blank" rel="noopener">Official JW.org</a>`:esc(data.source?.fileName||"Uploaded PDF")}</p></div>
+ </div>
+ <h3>CITANI KHAMA PA ULALIKI</h3>${(data.ministry||[]).map((p,i)=>`<div>${4+i}. <strong>${esc(p.title)}</strong> — ${esc(p.time)}</div>`).join("")||"<div>—</div>"}
+ <h3>UMOYO WATHU WACIKHRISTU</h3>${(data.living||[]).map(p=>`<div><strong>${esc(p.title)}</strong> — ${esc(p.time)}</div>`).join("")||"<div>—</div>"}`
+}
+function showImportPreview(data,mode="new"){
+ pendingImport=data;pendingImportMode=mode;importBody.innerHTML=dataToPreviewHtml(data);
+ importTitle.textContent=data.source?.type==="jw.org"?"Import from JW.org":"Import from Workbook PDF";
+ confirmImportBtn.classList.toggle("hidden",mode!=="new");applyImportCurrentBtn.classList.toggle("hidden",mode!=="current");
+ importModal.classList.remove("hidden")
+}
+function applyImportedData(w,data){
+ w.startDate=data.startDate||w.startDate;w.endDate=data.endDate||w.endDate;w.label=data.weekLabel||weekLabelFromDates(w.startDate,w.endDate);w.bibleReading=data.bibleReading||w.bibleReading;
+ Object.assign(w.fields,{openingSong:data.openingSong||"",openingComments:data.openingComments||"1 min.",p1title:data.p1title||"[Title]",p3scripture:data.p3scripture||"",livingSong:data.livingSong||"",cbsReference:data.cbsReference||"",concludingComments:data.concludingComments||"3 min.",closingSong:data.closingSong||""});
+ w.ministry=(data.ministry?.length?data.ministry:blankMinistry()).map(p=>({id:uid("m"),title:p.title||"[Title]",time:p.time||"5 min.",type:p.type||"demonstration",main:{student:"",assistant:"",filter:p.type==="talk"?"brother":"all"},aux:{student:"",assistant:"",filter:p.type==="talk"?"brother":"all"}}));
+ w.living=(data.living?.length?data.living:blankLiving()).map(p=>({id:uid("l"),title:p.title||"[Title]",time:p.time||"10 min.",person:""}));
+ w.source=data.source||null;clearWeekAssignments(w)
+}
+async function importJw(mode="new"){
+ const start=mode==="new"?newWeekStart.value:currentWeek().startDate;if(!start)return alert("Choose the week start date first.");
+ const btn=mode==="new"?fetchJwBtn:refreshJwBtn,old=btn.textContent;btn.disabled=true;btn.textContent="Searching JW.org…";
+ try{showImportPreview(await fetchWeekFromJw(start),mode)}catch(e){console.error(e);alert(e.message||"JW.org import failed.")}finally{btn.disabled=false;btn.textContent=old}
+}
+function loadPdfJs(){
+ if(window.pdfjsLib)return Promise.resolve(window.pdfjsLib);
+ const urls=["https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js","https://cdn.jsdelivr.net/npm/pdfjs-dist@3.11.174/build/pdf.min.js"];
+ return new Promise((resolve,reject)=>{
+   let i=0;const next=()=>{if(i>=urls.length)return reject(new Error("Could not load the PDF reader library. Connect to the internet and try again."));
+     const s=document.createElement("script");s.src=urls[i++];s.onload=()=>{if(window.pdfjsLib){pdfjsLib.GlobalWorkerOptions.workerSrc="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";resolve(pdfjsLib)}else next()};s.onerror=next;document.head.appendChild(s)};next()
+ })
+}
+function textLinesFromPdfItems(items){
+ const rows=[];for(const it of items){const y=Math.round((it.transform?.[5]||0)*2)/2,x=it.transform?.[4]||0;let r=rows.find(a=>Math.abs(a.y-y)<=2);if(!r){r={y,items:[]};rows.push(r)}r.items.push({x,s:it.str||""})}
+ rows.sort((a,b)=>b.y-a.y);return rows.map(r=>r.items.sort((a,b)=>a.x-b.x).map(x=>x.s).join(" ").replace(/\s+/g," ").trim()).filter(Boolean)
+}
+function pdfSearchText(s){
+ return String(s||"")
+   .normalize("NFKD")
+   .replace(/[\u2010\u2011\u2012\u2013\u2014\u2212]/g,"-")
+   .replace(/\u00a0/g," ")
+   .replace(/\s+/g," ")
+   .trim()
+}
+function pdfCompactText(s){
+ return pdfSearchText(s).toLowerCase().replace(/[^a-z0-9]+/g,"")
+}
+function targetWeekPatterns(startIso){
+ const start=parseDate(mondayOf(startIso)),end=parseDate(plusDays(mondayOf(startIso),6));
+ if(!start||!end)return[];
+ const month=MONTHS[start.getMonth()],day=start.getDate(),endDay=end.getDate();
+ const mn=month.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+ return[
+   new RegExp(`${mn}\\s*${day}\\s*[-–—]?\\s*${endDay}`,"i"),
+   new RegExp(`${mn}\\s*${day}(?:\\D|$)`,"i"),
+   new RegExp(`${day}\\s*[-–—]\\s*${endDay}\\s*${mn}`,"i"),
+   new RegExp(`${day}\\s+${mn}`,"i")
+ ]
+}
+function pageMatchesWeek(txt,startIso){
+ const s=pdfSearchText(txt),compact=pdfCompactText(txt);
+ const d=parseDate(mondayOf(startIso)),e=parseDate(plusDays(mondayOf(startIso),6));
+ if(!d||!e)return false;
+ if(targetWeekPatterns(startIso).some(r=>r.test(s)))return true;
+ const month=MONTHS[d.getMonth()].toLowerCase();
+ return compact.includes(`${month}${d.getDate()}${e.getDate()}`)||compact.includes(`${month}${d.getDate()}`)
+}
+function detectWeeksInPdfText(txt,year){
+ const s=pdfSearchText(txt),found=[];
+ for(let i=0;i<MONTHS.length;i++){
+   const name=MONTHS[i],re=new RegExp(`${name}\\s*(\\d{1,2})\\s*[-–—]\\s*(\\d{1,2})`,"ig");
+   let q;
+   while((q=re.exec(s))){
+     const a=+q[1],b=+q[2];
+     if(a>=1&&a<=31&&b>=1&&b<=31)found.push(`${name} ${a}–${b}, ${year}`)
+   }
+ }
+ return [...new Set(found)]
+}
+async function extractSelectedWeekFromPdf(file,startIso){
+ const lib=await loadPdfJs(),pdf=await lib.getDocument({data:await file.arrayBuffer()}).promise;
+ const monday=mondayOf(startIso),d=parseDate(monday),needle=`${MONTHS[d.getMonth()]} ${d.getDate()}`;
+ const pageTexts=[];let hit=-1,fallback=-1;const detected=[];
+ for(let n=1;n<=pdf.numPages;n++){
+   const p=await pdf.getPage(n),tc=await p.getTextContent(),txt=textLinesFromPdfItems(tc.items).join("\n");
+   pageTexts.push(txt);
+   const normalized=pdfSearchText(txt);
+   detectWeeksInPdfText(normalized,d.getFullYear()).forEach(x=>detected.push(x));
+   const hasSections=/CUMA COPEZEKA M[’']?MAU A MULUNGU/i.test(normalized)||/CITANI KHAMA PA ULALIKI/i.test(normalized)||/UMOYO WATHU WACIKHRISTU/i.test(normalized);
+   if(pageMatchesWeek(normalized,monday)){
+     if(fallback<0)fallback=n-1;
+     if(hit<0&&hasSections)hit=n-1
+   }
+ }
+ // Some official workbook layouts put the week/date heading at the bottom of
+ // one PDF page and the meeting sections on the next page.
+ if(hit<0){
+   for(let i=0;i<pageTexts.length-1;i++){
+     if(pageMatchesWeek(pageTexts[i],monday)){
+       const next=pdfSearchText(pageTexts[i+1]);
+       if(/CUMA COPEZEKA|CITANI KHAMA PA ULALIKI|UMOYO WATHU WACIKHRISTU/i.test(next)){hit=i;break}
+     }
+   }
+ }
+ if(hit<0)hit=fallback;
+ if(hit<0){
+   const weeks=[...new Set(detected)].slice(0,12);
+   const extra=weeks.length?`\n\nWeeks I could detect in this PDF:\n• ${weeks.join("\n• ")}`:"";
+   throw new Error(`I could not find the week beginning ${needle} in this PDF.${extra}\n\nPlease make sure the uploaded workbook contains that week, or choose one of the detected weeks.`)
+ }
+ const chunk=[pageTexts[hit],pageTexts[hit+1]||"",pageTexts[hit+2]||""].join("\n");
+ const data=parseMeetingText(chunk,monday);
+ data.source={type:"pdf",fileName:file.name,importedAt:new Date().toISOString()};
+ return data
+}
+async function importPdf(file,mode="new"){
+ if(!file)return;const start=mode==="new"?newWeekStart.value:currentWeek().startDate;if(!start){alert("Choose the week start date first.");return}
+ try{showImportPreview(await extractSelectedWeekFromPdf(file,start),mode)}catch(e){console.error(e);alert(e.message||"PDF import failed.")}
+}
+function createWeekFromPendingImport(){
+ if(!pendingImport)return;let w=blankWeek(pendingImport.startDate,pendingImport.endDate,pendingImport.weekLabel);const cur=currentWeek();if(cur?.congregation)w.congregation=cur.congregation;applyImportedData(w,pendingImport);state.weeks.push(w);state.currentWeekId=w.id;saveState();importModal.classList.add("hidden");renderEverything();switchTab("scheduleTab")
+}
+function applyPendingToCurrent(){
+ if(!pendingImport)return;if(!confirm(`Replace the meeting titles, songs and scriptures for ${currentWeek().label}? Existing publisher assignments for this week will be cleared.`))return;applyImportedData(currentWeek(),pendingImport);saveState();importModal.classList.add("hidden");renderEverything();switchTab("scheduleTab")
+}
+async function checkImporterServer(){
+ if(location.protocol==="file:"){serverStatus.innerHTML="<strong>Standalone mode.</strong> PDF import works here. For <strong>Fetch from JW.org</strong>, extract the v4.8 ZIP and double-click <strong>START_S140_ONLINE.bat</strong>. The browser will open automatically in online mode.";return}
+ try{const r=await fetch("/api/health",{cache:"no-store"});if(!r.ok)throw 0;serverStatus.innerHTML='<strong>Online importer connected.</strong> JW.org fetching and PDF upload are ready.'}
+ catch(e){serverStatus.innerHTML='<strong>Static mode detected.</strong> PDF import works, but JW.org automatic fetching needs the included Node server (server.js).'}
+}
+
+function finalizeWeek(){
+ collectFormToWeek();const w=currentWeek(),issues=conflictIssues(w);if(issues.some(i=>i.level==="error")&&!confirm("There are assignment errors. Finalize anyway?"))return;
+ const now=new Date().toISOString(),rec=assignmentRecords(w).map(r=>({...r,weekId:w.id,weekLabel:w.label,weekStart:w.startDate,date:now}));state.history=state.history.filter(h=>h.weekId!==w.id&&h.weekLabel!==w.label).concat(rec);saveState();alert(`Recorded ${rec.length} assignments for ${w.label}.`);renderSchedule();renderPublishers()
+}
+function clearCurrentAssignments(){if(!confirm("Clear all assigned names for this week? Titles, songs, dates and scriptures will remain."))return;clearWeekAssignments(currentWeek());saveState();renderSchedule()}
+
+function exportBackup(){collectFormToWeek();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="S140_Meeting_Scheduler_v4_Backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+function importBackup(file){const r=new FileReader();r.onload=()=>{try{state=migrate(JSON.parse(r.result));saveState();renderEverything();alert("Backup restored and migrated successfully.")}catch(e){console.error(e);alert("That backup could not be imported.")}};r.readAsText(file)}
+
+function pdfEscape(s){return clean(s).replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)")}
+function hexRgb(hex){const h=hex.replace("#","");return[parseInt(h.slice(0,2),16)/255,parseInt(h.slice(2,4),16)/255,parseInt(h.slice(4,6),16)/255]}
+function buildPdfBlob(w){
+ const W=841.89,H=595.28,M=24,R=W-M,CW=R-M;const cmds=[];const meas=document.createElement("canvas").getContext("2d");
+ const colors={teal:"#008a9a",gold:"#d38a00",red:"#c92834",blue:"#356fbd",text:"#252d30",muted:"#66767c",line:"#b9c4c8",light:"#f6f8f8"};
+ const rgb=h=>hexRgb(h).map(n=>n.toFixed(3)).join(" ");
+ function line(x1,top1,x2,top2,color=colors.line,wid=.7){cmds.push(`${rgb(color)} RG ${wid} w ${x1.toFixed(2)} ${(H-top1).toFixed(2)} m ${x2.toFixed(2)} ${(H-top2).toFixed(2)} l S`)}
+ function rect(x,top,wid,hei,fill){cmds.push(`${rgb(fill)} rg ${x.toFixed(2)} ${(H-top-hei).toFixed(2)} ${wid.toFixed(2)} ${hei.toFixed(2)} re f`)}
+ function width(txt,size,bold=false){meas.font=`${bold?"700":"400"} ${size}px Arial`;return meas.measureText(clean(txt)).width*.82}
+ function text(txt,x,top,size=10,bold=false,color=colors.text,align="left"){
+   txt=clean(txt);if(!txt)return;let xx=x;if(align==="right")xx=x-width(txt,size,bold);if(align==="center")xx=x-width(txt,size,bold)/2;
+   cmds.push(`BT ${rgb(color)} rg /${bold?"F2":"F1"} ${size.toFixed(2)} Tf ${xx.toFixed(2)} ${(H-top).toFixed(2)} Td (${pdfEscape(txt)}) Tj ET`)
+ }
+ function fit(txt,max,size,bold=false,min=7.5){let s=size;while(s>min&&width(txt,s,bold)>max)s-=.25;return s}
+ function wrap(txt,max,size,bold=false,maxLines=2){txt=clean(txt);if(!txt)return[];const words=txt.split(" ");let lines=[],cur="";for(const word of words){const n=cur?cur+" "+word:word;if(width(n,size,bold)<=max||!cur)cur=n;else{lines.push(cur);cur=word;if(lines.length===maxLines-1)break}}if(cur)lines.push(cur);return lines.slice(0,maxLines)}
+ const rows=4+w.ministry.length+w.living.length;
+ const rowH=Math.max(23.5,Math.min(31,(H-268)/rows));const bodyFont=rowH>=29?10.8:rowH>=26?10.1:9.2;const smallFont=bodyFont-1.4;const f=w.fields;
+ text("MSONKHANO WA MKATI MWA MLUNGU",M,34,17,true,colors.text);
+ const topRightX=R-305,topRightW=285;
+ cellText(w.congregation,topRightX,20,topRightW,21,10.5,true,colors.muted,"left",1);
+ line(M,44,R,44,"#829399",1.2);
+ text(w.label||weekLabelFromDates(w.startDate,w.endDate),M,64,14,true);text(w.bibleReading,M,81,10.5,true);
+ cellText("Cheyamani: "+(pubName(f.chairman)||"-"),topRightX,50,topRightW,22,10.5,false,colors.text,"left",1);
+ if(w.auxEnabled)cellText("Mlangizi wa Kalasi Yowonjezera: "+(pubName(f.auxCounselor)||"-"),topRightX,68,topRightW,20,9.4,false,colors.text,"left",1);
+ text(`Nyimbo ${f.openingSong||"-"} ndi Pemphero: ${pubName(f.openingPrayer)||"-"}`,M,102,10.8,true,colors.blue);text(`Mau Oyamba (${f.openingComments||"1 min."}) - ${pubName(f.chairman)||"-"}`,M,119,10.2,false);
+ let y=132;
+ function section(title,color){rect(M,y,CW,19,color);text(title,M+7,y+13,10.5,true,"#ffffff");y+=23}
+ function colLayout(split=true){
+   const timeW=48;
+   const titleW=split?330:415;
+   const rem=CW-timeW-titleW;
+   return{timeW,titleW,rem,assignStart:M+timeW+titleW}
+ }
+ function safeLines(txt,maxW,size,bold=false,maxLines=2){
+   txt=clean(txt);if(!txt)return[];
+   // Student / assistant pairs look cleaner as two separate lines.
+   if(txt.includes(" / ")&&maxLines>=2){
+     const parts=txt.split(" / ").map(x=>clean(x)).filter(Boolean);
+     if(parts.length===2){
+       const s1=fit(parts[0],maxW,size,bold,6.6),s2=fit(parts[1],maxW,size,bold,6.6);
+       return[{t:parts[0],s:s1},{t:parts[1],s:s2}]
+     }
+   }
+   let s=fit(txt,maxW,size,bold,6.6);
+   if(width(txt,s,bold)<=maxW)return[{t:txt,s}];
+   const words=txt.split(" ");let lines=[],cur="";
+   for(const word of words){
+     const n=cur?cur+" "+word:word;
+     if(width(n,size,bold)<=maxW||!cur)cur=n;
+     else{lines.push(cur);cur=word;if(lines.length===maxLines-1)break}
+   }
+   if(cur)lines.push(cur);
+   return lines.slice(0,maxLines).map(v=>({t:v,s:fit(v,maxW,size,bold,6.6)}))
+ }
+ function cellText(txt,x,top,wid,hei,size=10,bold=false,color=colors.text,align="left",maxLines=2){
+   const pad=6,ls=safeLines(txt,wid-pad*2,size,bold,maxLines);if(!ls.length)return;
+   const lineGap=Math.max(8.5,Math.min(11,size*.98)),blockH=(ls.length-1)*lineGap;
+   const first=top+hei/2-blockH/2+size*.34;
+   ls.forEach((it,i)=>{
+     const yy=first+i*lineGap;
+     if(align==="center")text(it.t,x+wid/2,yy,it.s,bold,color,"center");
+     else if(align==="right")text(it.t,x+wid-pad,yy,it.s,bold,color,"right");
+     else text(it.t,x+pad,yy,it.s,bold,color,"left")
+   })
+ }
+ function tableHeader(split=true){
+   const {timeW,titleW,rem,assignStart}=colLayout(split);
+   text("Nthawi",M+4,y+12,7.8,true,colors.muted);
+   text("Nkhani / Gawo",M+timeW+4,y+12,7.8,true,colors.muted);
+   if(split){
+     text("Kalasi Yowonjezera",assignStart+rem/4,y+12,7.3,true,colors.muted,"center");
+     text("Holo Yaikulu",assignStart+rem*3/4,y+12,7.3,true,colors.muted,"center")
+   }else{
+     text("Wopatsidwa",assignStart+rem/2,y+12,7.8,true,colors.muted,"center")
+   }
+   y+=16
+ }
+ function row(num,title,dur,opts={}){
+   const split=opts.split!==false,{timeW,titleW,rem,assignStart}=colLayout(split);line(M,y,R,y);
+   text(dur,M+4,y+rowH*.62,smallFont,false,colors.muted);
+   text(num+".",M+timeW+3,y+rowH*.62,bodyFont,true,opts.color||colors.text);
+   cellText(title,M+timeW+24,y,titleW-24,rowH,bodyFont,true,opts.color||colors.text,"left",2);
+   line(assignStart,y,assignStart,y+rowH);
+   if(split){
+     const half=rem/2;
+     line(assignStart+half,y,assignStart+half,y+rowH);
+     cellText(opts.aux||"",assignStart,y,half,rowH,bodyFont,false,colors.text,"left",2);
+     cellText(opts.main||"",assignStart+half,y,half,rowH,bodyFont,false,colors.text,"left",2)
+   }else{
+     cellText(opts.main||"",assignStart,y,rem,rowH,bodyFont,false,colors.text,"left",2)
+   }
+   line(M,y+rowH,R,y+rowH);y+=rowH
+ }
+
+ function ministryHeader(auxEnabled){
+   const {timeW,titleW,rem,assignStart}=colLayout(auxEnabled);
+   text("Nthawi",M+4,y+(auxEnabled?16:12),7.8,true,colors.muted);
+   text("Nkhani / Gawo",M+timeW+4,y+(auxEnabled?16:12),7.8,true,colors.muted);
+
+   line(assignStart,y,assignStart,y+(auxEnabled?27:16));
+
+   if(auxEnabled){
+     const hallW=rem/2,subW=hallW/2;
+     // Hall labels
+     text("Kalasi Yowonjezera",assignStart+hallW/2,y+9,7.1,true,colors.muted,"center");
+     text("Holo Yaikulu",assignStart+hallW+hallW/2,y+9,7.1,true,colors.muted,"center");
+
+     // Hall separator and Student/Assistant separators.
+     line(assignStart+hallW,y,assignStart+hallW,y+27);
+     line(assignStart+subW,y+11,assignStart+subW,y+27);
+     line(assignStart+hallW+subW,y+11,assignStart+hallW+subW,y+27);
+
+     text("Student",assignStart+subW/2,y+22,6.5,true,colors.muted,"center");
+     text("Assistant",assignStart+subW+subW/2,y+22,6.5,true,colors.muted,"center");
+     text("Student",assignStart+hallW+subW/2,y+22,6.5,true,colors.muted,"center");
+     text("Assistant",assignStart+hallW+subW+subW/2,y+22,6.5,true,colors.muted,"center");
+     y+=27
+   }else{
+     const half=rem/2;
+     line(assignStart+half,y,assignStart+half,y+16);
+     text("Wophunzira / Student",assignStart+half/2,y+12,7.3,true,colors.muted,"center");
+     text("Wothandiza / Assistant",assignStart+half+half/2,y+12,7.3,true,colors.muted,"center");
+     y+=16
+   }
+ }
+
+ function ministryRow(num,title,dur,p,auxEnabled){
+   const {timeW,titleW,rem,assignStart}=colLayout(auxEnabled);
+   line(M,y,R,y);
+   text(dur,M+4,y+rowH*.62,smallFont,false,colors.muted);
+   text(num+".",M+timeW+3,y+rowH*.62,bodyFont,true,colors.gold);
+   cellText(title,M+timeW+24,y,titleW-24,rowH,bodyFont,true,colors.gold,"left",2);
+   line(assignStart,y,assignStart,y+rowH);
+
+   const speakerText=(h)=>{
+     const n=pubName(p[h].student)||"";
+     return p.type==="talk"&&n?`Wokamba: ${n}`:n
+   };
+   const assistantText=(h)=>p.type==="talk"?"":(pubName(p[h].assistant)||"");
+
+   if(auxEnabled){
+     const hallW=rem/2,subW=hallW/2;
+     line(assignStart+subW,y,assignStart+subW,y+rowH);
+     line(assignStart+hallW,y,assignStart+hallW,y+rowH);
+     line(assignStart+hallW+subW,y,assignStart+hallW+subW,y+rowH);
+
+     cellText(speakerText("aux"),assignStart,y,subW,rowH,bodyFont,false,colors.text,"left",2);
+     cellText(assistantText("aux"),assignStart+subW,y,subW,rowH,bodyFont,false,colors.text,"left",2);
+     cellText(speakerText("main"),assignStart+hallW,y,subW,rowH,bodyFont,false,colors.text,"left",2);
+     cellText(assistantText("main"),assignStart+hallW+subW,y,subW,rowH,bodyFont,false,colors.text,"left",2)
+   }else{
+     const half=rem/2;
+     line(assignStart+half,y,assignStart+half,y+rowH);
+     cellText(speakerText("main"),assignStart,y,half,rowH,bodyFont,false,colors.text,"left",2);
+     cellText(assistantText("main"),assignStart+half,y,half,rowH,bodyFont,false,colors.text,"left",2)
+   }
+
+   line(M,y+rowH,R,y+rowH);
+   y+=rowH
+ }
+
+ section("CUMA COPEZEKA M'MAU A MULUNGU",colors.teal);
+ row(1,f.p1title||"[Title]","10 min.",{split:false,main:pubName(f.p1person),color:colors.teal});row(2,"Kufufuza Cuma Cauzimu","10 min.",{split:false,main:pubName(f.p2person),color:colors.teal});
+ const readingAssigned=w.auxEnabled?`Kalasi: ${pubName(f.p3aux)||"-"} / Holo: ${pubName(f.p3main)||"-"}`:(pubName(f.p3main)||"");
+ row(3,`Kuwerenga Baibo${f.p3scripture?" - "+f.p3scripture:""}`,"4 min.",{split:false,main:readingAssigned,color:colors.teal});
+ y+=5;section("CITANI KHAMA PA ULALIKI",colors.gold);ministryHeader(w.auxEnabled);
+ w.ministry.forEach((p,i)=>ministryRow(4+i,p.title,p.time,p,w.auxEnabled));
+ y+=5;section("UMOYO WATHU WACIKHRISTU",colors.red);text(`Nyimbo ${f.livingSong||"-"}`,M,y+12,10.5,true,colors.blue);y+=17;tableHeader(false);
+ w.living.forEach((p,i)=>row(firstLivingNumber(w)+i,p.title,p.time,{split:false,main:pubName(p.person),color:colors.red}));
+ row(cbsNo(w),`Phunzilo la Baibo la Mpingo${f.cbsReference?" - "+f.cbsReference:""}`,"30 min.",{split:false,main:`Wotsogoza: ${pubName(f.cbsConductor)||"-"} / Wowerenga: ${pubName(f.cbsReader)||"-"}`,color:colors.red});
+ y+=5;line(M,y,R,y,"#829399",.9);
+ const footerH=27,footerMid=M+CW*.50;
+ cellText(`Mau Othela (${f.concludingComments||"3 min."}) - ${pubName(f.chairman)||"-"}`,M,y,CW*.50-5,footerH,9.6,true,colors.text,"left",2);
+ cellText(`Nyimbo ${f.closingSong||"-"} ndi Pemphero: ${pubName(f.closingPrayer)||"-"}`,footerMid+5,y,CW*.50-5,footerH,9.5,true,colors.blue,"left",2);
+ const stream=cmds.join("\n");const enc=new TextEncoder(),parts=[],offs=[0];const ps=s=>parts.push(enc.encode(s));ps("%PDF-1.4\n");
+ function obj(n,body,streamBytes){offs[n]=parts.reduce((a,b)=>a+b.length,0);ps(`${n} 0 obj\n${body}`);if(streamBytes){ps("\nstream\n");parts.push(streamBytes);ps("\nendstream")}ps("\nendobj\n")}
+ obj(1,"<< /Type /Catalog /Pages 2 0 R >>");obj(2,"<< /Type /Pages /Kids [3 0 R] /Count 1 >>");obj(3,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>`);obj(4,"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");obj(5,"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");const sb=enc.encode(stream);obj(6,`<< /Length ${sb.length} >>`,sb);
+ const xref=parts.reduce((a,b)=>a+b.length,0);ps("xref\n0 7\n0000000000 65535 f \n");for(let i=1;i<=6;i++)ps(String(offs[i]).padStart(10,"0")+" 00000 n \n");ps(`trailer\n<< /Size 7 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+ return new Blob(parts,{type:"application/pdf"})
+}
+function downloadPdfForWeek(w){const blob=buildPdfBlob(w),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`S140_${clean(w.label||"Meeting").replace(/[^A-Za-z0-9_-]+/g,"_")}.pdf`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
+function previewPdf(){collectFormToWeek();const url=URL.createObjectURL(buildPdfBlob(currentWeek()));previewFrame.src=url;previewWrap.classList.remove("hidden");previewWrap.dataset.url=url}
+function closePreview(){const u=previewWrap.dataset.url;if(u)URL.revokeObjectURL(u);previewWrap.classList.add("hidden");previewFrame.src="about:blank"}
+function printCurrent(){collectFormToWeek();const url=URL.createObjectURL(buildPdfBlob(currentWeek()));const w=window.open(url,"_blank");if(!w)return alert("Your browser blocked the print preview. Use Download PDF instead.");setTimeout(()=>{try{w.print()}catch(e){}},1000)}
+
+function renderEverything(){renderEligibility();renderTemplateSelectors();renderSchedule();renderWeeks();renderPublishers();renderTemplates()}
+const weekSelector=$("weekSelector"),weekStatus=$("weekStatus"),archiveWeekBtn=$("archiveWeekBtn"),weekLabel=$("weekLabel"),weekStart=$("weekStart"),weekEnd=$("weekEnd"),congregation=$("congregation"),bibleReading=$("bibleReading"),auxEnabled=$("auxEnabled"),auxCounselorWrap=$("auxCounselorWrap"),ministryParts=$("ministryParts"),livingParts=$("livingParts"),cbsNumber=$("cbsNumber"),conflictBox=$("conflictBox"),weekSearch=$("weekSearch"),weekFilter=$("weekFilter"),weekSort=$("weekSort"),weeksList=$("weeksList"),newWeekStart=$("newWeekStart"),newWeekEnd=$("newWeekEnd"),newWeekLabel=$("newWeekLabel"),newWeekTemplate=$("newWeekTemplate"),publisherList=$("publisherList"),pubSearch=$("pubSearch"),pubFilter=$("pubFilter"),eligibilityGrid=$("eligibilityGrid"),pubNameInput=$("pubName"),pubGender=$("pubGender"),pubActive=$("pubActive"),addPublisherBtn=$("addPublisherBtn"),cancelEditBtn=$("cancelEditBtn"),profileTitle=$("profileTitle"),profileBody=$("profileBody"),profileModal=$("profileModal"),templateName=$("templateName"),templateDesc=$("templateDesc"),templateList=$("templateList"),templateModalBody=$("templateModalBody"),templateModal=$("templateModal"),previewFrame=$("previewFrame"),previewWrap=$("previewWrap"),installBtn=$("installBtn");
+document.querySelectorAll(".tabbtn").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+weekSelector.onchange=()=>{collectFormToWeek();state.currentWeekId=weekSelector.value;saveState();renderSchedule()};
+newWeekGoBtn.onclick=()=>{switchTab("weeksTab");newWeekStart.focus()};duplicateWeekBtn.onclick=()=>duplicateWeek();loadTemplateBtn.onclick=openTemplateModal;archiveWeekBtn.onclick=()=>{const w=currentWeek();w.archived=!w.archived;saveState();renderSchedule();renderWeeks()};
+weekStart.onchange=()=>{if(weekStart.value&&!weekEnd.value)weekEnd.value=plusDays(weekStart.value,6);if(weekStart.value&&weekEnd.value&&!weekLabel.value.trim())weekLabel.value=weekLabelFromDates(weekStart.value,weekEnd.value);collectFormToWeek();renderWeekSelector()};
+weekEnd.onchange=()=>{if(weekStart.value&&weekEnd.value&&!weekLabel.value.trim())weekLabel.value=weekLabelFromDates(weekStart.value,weekEnd.value);collectFormToWeek();renderWeekSelector()};
+document.addEventListener("input",e=>{if(["weekLabel","congregation","bibleReading","openingSong","openingComments","p1title","p3scripture","livingSong","livingNote","cbsReference","concludingComments","closingSong"].includes(e.target.id))collectFormToWeek()});
+document.addEventListener("change",e=>{
+ if(e.target.matches(".assignment-select")){
+   const s=e.target,w=currentWeek(),previous=w.fields[s.id]||"",next=s.value;
+   const role=s.dataset.role||"";
+   const newLabel=staticAssignmentLabel(s);
+   if(next&&next!==previous&&!confirmAdditionalAssignment(next,newLabel)){s.value=previous;return}
+   if(next&&next!==previous&&!confirmRecentUsage(next,role,newLabel)){s.value=previous;return}
+   if(next&&next!==previous&&!confirmRecentUsageGeneral(next,newLabel)){s.value=previous;return}
+   collectFormToWeek();renderConflicts()
+ }
+});
+auxEnabled.onchange=()=>{currentWeek().auxEnabled=auxEnabled.checked;saveState();renderSchedule()};
+addMinistryBtn.onclick=()=>{currentWeek().ministry.push({id:uid("m"),title:"[Title]",time:"5 min.",type:"demonstration",main:{student:"",assistant:"",filter:"all"},aux:{student:"",assistant:"",filter:"all"}});saveState();renderSchedule()};
+addLivingBtn.onclick=()=>{currentWeek().living.push({id:uid("l"),title:"[Title]",time:"10 min.",person:""});saveState();renderSchedule()};
+saveBtn.onclick=()=>{collectFormToWeek();alert("Saved on this device.")};pdfBtn.onclick=()=>{collectFormToWeek();downloadPdfForWeek(currentWeek())};previewBtn.onclick=previewPdf;previewDownloadBtn.onclick=()=>downloadPdfForWeek(currentWeek());closePreviewBtn.onclick=closePreview;printBtn.onclick=printCurrent;finalizeBtn.onclick=finalizeWeek;clearBtn.onclick=clearCurrentAssignments;
+createWeekBtn.onclick=createWeek;fetchJwBtn.onclick=()=>importJw("new");refreshJwBtn.onclick=()=>importJw("current");weekPdfInput.onchange=e=>{const f=e.target.files[0];if(f)importPdf(f,"new");e.target.value=""};currentPdfInput.onchange=e=>{const f=e.target.files[0];if(f)importPdf(f,"current");e.target.value=""};
+closeImportBtn.onclick=()=>importModal.classList.add("hidden");cancelImportBtn.onclick=()=>importModal.classList.add("hidden");confirmImportBtn.onclick=createWeekFromPendingImport;applyImportCurrentBtn.onclick=applyPendingToCurrent;
+weekSearch.oninput=renderWeeks;weekFilter.onchange=renderWeeks;weekSort.onchange=renderWeeks;newWeekStart.onchange=()=>{newWeekEnd.value=plusDays(newWeekStart.value,6);newWeekLabel.value=weekLabelFromDates(newWeekStart.value,newWeekEnd.value)};
+addPublisherBtn.onclick=addPublisher;cancelEditBtn.onclick=resetPublisherForm;pubSearch.oninput=renderPublishers;pubFilter.onchange=renderPublishers;closeProfileBtn.onclick=()=>profileModal.classList.add("hidden");
+saveTemplateBtn.onclick=saveCurrentAsTemplate;closeTemplateModalBtn.onclick=()=>templateModal.classList.add("hidden");
+exportBtn.onclick=exportBackup;importFile.onchange=e=>e.target.files[0]&&importBackup(e.target.files[0]);
+window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstallPrompt=e;installBtn.classList.remove("hidden")});installBtn.onclick=async()=>{if(!deferredInstallPrompt)return alert("Install is available when this package is served from HTTPS or localhost in a supported browser.");deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;installBtn.classList.add("hidden")};
+async function resetLocalAppCaches(){
+ const localHost=location.hostname==="127.0.0.1"||location.hostname==="localhost";
+ if(!localHost)return;
+ try{
+   if("serviceWorker" in navigator){
+     const regs=await navigator.serviceWorker.getRegistrations();
+     await Promise.all(regs.map(r=>r.unregister()))
+   }
+ }catch(e){console.warn("Could not unregister old service workers",e)}
+ try{
+   if("caches" in window){
+     const keys=await caches.keys();
+     await Promise.all(keys.map(k=>caches.delete(k)))
+   }
+ }catch(e){console.warn("Could not clear old caches",e)}
+}
+resetLocalAppCaches();
+
+// Keep PWA/offline caching only for a real hosted site.
+// Local Windows mode deliberately stays uncached so every new version loads fresh.
+if("serviceWorker" in navigator &&
+   location.protocol.startsWith("http") &&
+   location.hostname!=="127.0.0.1" &&
+   location.hostname!=="localhost"){
+  navigator.serviceWorker.register("./service-worker.js").catch(()=>{})
+}
+if(location.protocol==="file:")standaloneBanner.classList.remove("hidden");renderEverything();saveState();checkImporterServer();
+</script>
+</body>
+</html>
