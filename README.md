@@ -1,4 +1,4 @@
-# S-140 Meeting Scheduler v5.6 — Intelligent rotation
+# S-140 Meeting Scheduler v5.7 — Automatic scheduling
 
 - Preserves assignments when refreshing matching meeting parts; changed parts require review.
 - Checks prior draft and finalized assignments and warns about future scheduled repetitions.
@@ -19,3 +19,9 @@ Run `npm start`; health endpoint: `/api/health`.
 - Uses approved eligibility only, same-gender pairings, and no second assignment in the same generated week.
 - Existing assignments are retained. Review workbook classifications before applying; ambiguous parts remain manual.
 - Does not model family-member exceptions, age, experience, or local approval; the overseer reviews the result.
+
+## Generate Automatic Schedule
+- Dedicated one-command schedule generator for the current week; review eligibility and workbook first.
+- Searches for the largest feasible set of compatible assignments, with a bounded search and explicit incomplete reporting.
+- Preserves existing assignments and saves a recoverable draft; recent-use exceptions require opt-in.
+- Student talks now have a separate brother-only eligibility checkbox. Existing names are retained but must be reviewed if a talk approval was not recorded.
