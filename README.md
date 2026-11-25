@@ -1,4 +1,4 @@
-# S-140 Meeting Scheduler v5.7 — Automatic scheduling
+# S-140 Meeting Scheduler v5.8 — Published-week automatic scheduling
 
 - Preserves assignments when refreshing matching meeting parts; changed parts require review.
 - Checks prior draft and finalized assignments and warns about future scheduled repetitions.
@@ -25,3 +25,10 @@ Run `npm start`; health endpoint: `/api/health`.
 - Searches for the largest feasible set of compatible assignments, with a bounded search and explicit incomplete reporting.
 - Preserves existing assignments and saves a recoverable draft; recent-use exceptions require opt-in.
 - Student talks now have a separate brother-only eligibility checkbox. Existing names are retained but must be reviewed if a talk approval was not recorded.
+
+## Fetch & Schedule All Online Weeks
+- Discovers published upcoming Cinyanja workbook issues and week links from official JW.org.
+- Imports validated programmes, schedules in chronological order using previous planned weeks as history.
+- Saves only after user review; preserves assigned, archived and finalized weeks and reports parse failures, unavailable roles and search limits.
+- Uses the current week by default, with adjustable start date and new-week auxiliary classroom preference.
+- Unrecognized ministry headings remain manual. No publisher data is sent to JW.org.

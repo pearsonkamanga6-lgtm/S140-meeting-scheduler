@@ -59,7 +59,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
 <body>
 <div class="app">
  <div class="topbar">
-  <div class="brand"><h1>S-140 Meeting Scheduler <span style="font-size:.72rem;background:#173f49;color:#fff;padding:3px 7px;border-radius:999px;vertical-align:middle">v5.7</span></h1><small>Ndandanda ya msonkhano • Cinyanja</small></div>
+  <div class="brand"><h1>S-140 Meeting Scheduler <span style="font-size:.72rem;background:#173f49;color:#fff;padding:3px 7px;border-radius:999px;vertical-align:middle">v5.8</span></h1><small>Ndandanda ya msonkhano • Cinyanja</small></div>
   <div class="tabs">
    <button class="tabbtn active" data-tab="scheduleTab">Schedule</button>
    <button class="tabbtn" data-tab="weeksTab">Weeks</button>
@@ -71,7 +71,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
  </div>
 
  <section id="scheduleTab" class="tab">
-  <div id="versionBanner" class="notice ok" style="margin-top:14px"><strong>Running version:</strong> v5.7. Automatic scheduling and assignment review.</div><div id="standaloneBanner" class="notice warn hidden" style="margin-top:14px"><strong>Standalone mode:</strong> PDF import works, but JW.org automatic fetch needs online mode. Extract the application ZIP and double-click <strong>START_S140_ONLINE.bat</strong>.</div>
+  <div id="versionBanner" class="notice ok" style="margin-top:14px"><strong>Running version:</strong> v5.8. Published-week discovery and automatic scheduling.</div><div id="standaloneBanner" class="notice warn hidden" style="margin-top:14px"><strong>Standalone mode:</strong> PDF import works, but JW.org automatic fetch needs online mode. Extract the application ZIP and double-click <strong>START_S140_ONLINE.bat</strong>.</div>
   <div class="card">
    <div class="weekbar">
     <strong>Week:</strong>
@@ -86,7 +86,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
   </div>
 
   <div class="toolbar">
-   <button class="primary" id="saveBtn">Save</button><button class="primary" id="autoScheduleBtn">⚡ Generate Automatic Schedule</button><button id="rotationBtn">Review Assignment Suggestions</button>
+   <button class="primary" id="saveBtn">Save</button><button class="primary" id="onlineScheduleBtn">⚡ Fetch & Schedule All Online Weeks</button><button class="primary" id="autoScheduleBtn">Generate Current Week</button><button id="rotationBtn">Review Assignment Suggestions</button>
    <button class="pdfbtn" id="pdfBtn">Download PDF</button>
    <button id="previewBtn">PDF Preview</button>
    <button id="printBtn">Print</button>
@@ -176,7 +176,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
    </div>
    <div class="toolbar">
     <button class="primary" id="createWeekBtn">Create Manually</button>
-    <button class="pdfbtn" id="fetchJwBtn">Fetch from JW.org</button>
+    <button class="pdfbtn" id="fetchJwBtn">Fetch from JW.org</button><button class="primary" id="onlineScheduleWeeksBtn">Fetch & Schedule All Online Weeks</button>
     <label class="filelabel">Upload Workbook PDF<input id="weekPdfInput" type="file" accept="application/pdf" style="display:none"></label>
    </div>
    <div id="onlineImportStatus" class="notice ok"><strong>Automatic import:</strong> choose the week start date, then fetch the official Cinyanja schedule from JW.org or upload the official meeting-workbook PDF.</div>
@@ -262,6 +262,15 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
  <iframe id="previewFrame"></iframe>
 </div></div>
 
+<div id="onlineScheduleModal" class="modal hidden"><div class="modal-card">
+ <div class="modal-head"><h2>Fetch &amp; Schedule All Published Weeks</h2><button id="onlineScheduleClose" class="closebtn">Close</button></div>
+ <p>Discover all published upcoming Cinyanja meeting programmes on official JW.org, then allocate eligible publishers in chronological order. Existing assignments and finalized/archived weeks are protected. Only vacant roles are filled.</p>
+ <div class="grid2"><div><label>From week (default: current week)</label><input type="date" id="onlineScheduleFrom"></div><div><label>Auxiliary classroom for new weeks</label><select id="onlineScheduleAux"><option value="yes">Enabled</option><option value="no">Disabled</option></select></div></div>
+ <label class="switchrow"><input type="checkbox" id="onlineScheduleRecent">When necessary, allow recent-use exceptions (last/next two weeks)</label>
+ <label class="switchrow"><input type="checkbox" id="onlineScheduleVerified">I have checked the publisher eligibility register and will review the imported meeting parts and generated drafts before finalizing.</label>
+ <div class="toolbar"><button class="primary" id="onlineScheduleRun" disabled>Discover, Import &amp; Generate Drafts</button><button id="onlineScheduleApply" class="primary" disabled>Save All Generated Weeks</button></div>
+ <div id="onlineScheduleStatus" class="notice ok" role="status">Ready to search the official catalogue.</div><div id="onlineScheduleResults"></div>
+ </div></div>
 <div id="autoScheduleModal" class="modal hidden"><div class="modal-card">
  <div class="modal-head"><h2>Generate Automatic Schedule</h2><button id="autoScheduleClose" class="closebtn">Close</button></div>
  <p>Fill the current week's vacant roles using registered, active, available publishers with approved eligibility. Existing assignments stay unchanged. The schedule is saved as a draft, not finalized.</p>
@@ -282,8 +291,8 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
  </div></div>
 <script>
 const SEED=[["Aaron Mzumara", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Amos Mzumara", "brother", ["prayer", "bibleReading", "ministryStudent", "ministryAssistant"]], ["Anastasia Mwandira", "sister", ["ministryStudent", "ministryAssistant"]], ["Beauty Banda", "sister", ["ministryStudent", "ministryAssistant"]], ["Biliat Phiri", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Chanda Mulenga", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Edson Daka", "brother", ["prayer", "bibleReading", "ministryStudent", "ministryAssistant"]], ["Edwin Mwanza", "brother", ["prayer", "bibleReading", "ministryStudent", "ministryAssistant"]], ["George Banda", "brother", ["prayer", "treasuresTalk", "spiritualGems", "bibleReading"]], ["Innocent Phiri", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Isaac Tembo", "brother", ["bibleReading", "ministryStudent", "ministryAssistant"]], ["Joyce Zulu", "sister", ["ministryStudent", "ministryAssistant"]], ["kondwan Mwandira", "brother", ["prayer", "bibleReading", "ministryStudent", "ministryAssistant"]], ["Laston Nyirongo", "brother", ["prayer", "ministryStudent", "ministryAssistant"]], ["Lotti Phiri", "brother", ["prayer", "treasuresTalk", "spiritualGems", "bibleReading"]], ["Mbewe Fransis", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Mbunge Elijah", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Nakiwe Mwanza", "sister", ["ministryStudent", "ministryAssistant"]], ["Nelia Chirwa", "sister", ["ministryStudent", "ministryAssistant"]], ["Pearson Kamanga", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Rosalyn Nkwazi", "sister", ["ministryStudent", "ministryAssistant"]], ["Royd Kalule", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Saulos Phiri", "brother", ["prayer", "treasuresTalk", "spiritualGems", "bibleReading"]], ["Treser Njobvu", "sister", ["ministryStudent", "ministryAssistant"]], ["Victor Banda", "brother", ["bibleReading", "ministryStudent", "ministryAssistant", "cbsReader"]], ["victoria Mbewe", "sister", ["ministryStudent", "ministryAssistant"]]];
-const ROLE_LABELS={chairman:"Chairman",counselor:"Auxiliary Classroom Counselor",prayer:"Prayer",treasuresTalk:"Treasures talk",spiritualGems:"Spiritual Gems",bibleReading:"Bible Reading",ministryTalk:"Student talk (Wokamba — brothers only)",ministryStudent:"Publisher / Student (Wophunzira)",ministryAssistant:"Householder / Assistant (Wothandiza)",livingTalk:"Living as Christians talk",cbsConductor:"CBS Conductor",cbsReader:"CBS Reader"};
-const BROTHER_ONLY=new Set(["chairman","counselor","prayer","treasuresTalk","spiritualGems","bibleReading","livingTalk","cbsConductor","cbsReader","ministryTalk"]);
+const ROLE_LABELS={chairman:"Chairman",counselor:"Auxiliary Classroom Counselor",prayer:"Prayer",treasuresTalk:"Treasures talk",spiritualGems:"Spiritual Gems",bibleReading:"Bible Reading",ministryDiscussion:"Ministry discussion (qualified brother)",ministryTalk:"Student talk (Wokamba — brothers only)",ministryStudent:"Publisher / Student (Wophunzira)",ministryAssistant:"Householder / Assistant (Wothandiza)",livingTalk:"Living as Christians talk",cbsConductor:"CBS Conductor",cbsReader:"CBS Reader"};
+const BROTHER_ONLY=new Set(["chairman","counselor","prayer","treasuresTalk","spiritualGems","bibleReading","livingTalk","cbsConductor","cbsReader","ministryTalk","ministryDiscussion"]);
 const STORAGE_KEY="s140Scheduler";
 const CHECKPOINT_KEY=STORAGE_KEY+":recovery";
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -462,28 +471,28 @@ function renderSchedule(){
 }
 function studentGender(id){return pubById(id)?.gender||""}
 function ministryHallHTML(p,h,label){
- const talk=p.type==="talk",studentId=p[h].student,studentGen=studentGender(studentId),baseFilter=talk?"brother":(p[h].filter||"all"),assistantFilter=studentGen||baseFilter;
+ const talk=p.type==="talk"||p.type==="discussion",studentId=p[h].student,studentGen=studentGender(studentId),baseFilter=talk?"brother":(p[h].filter||"all"),assistantFilter=studentGen||baseFilter;
  return`<div class="hall"><h4>${label}</h4>${talk?'<span class="badge">Talk — brothers only</span>':`<div class="filters"><button class="filter ${baseFilter==="all"?"active":""}" data-hall="${h}" data-filter="all">All</button><button class="filter ${baseFilter==="brother"?"active":""}" data-hall="${h}" data-filter="brother">Brothers</button><button class="filter ${baseFilter==="sister"?"active":""}" data-hall="${h}" data-filter="sister">Sisters</button></div>`}
- <div class="${talk?"":"grid2"}"><div class="field"><label>${talk?"Wokamba / Speaker":"Wophunzira / Publisher"}</label><select class="ministry-select" data-hall="${h}" data-kind="student">${eligiblePublishers(talk?"ministryTalk":"ministryStudent",baseFilter,studentId)}</select></div>
+ <div class="${talk?"":"grid2"}"><div class="field"><label>${talk?"Wokamba / Speaker":"Wophunzira / Publisher"}</label><select class="ministry-select" data-hall="${h}" data-kind="student">${eligiblePublishers(p.type==="discussion"?"ministryDiscussion":talk?"ministryTalk":"ministryStudent",baseFilter,studentId)}</select></div>
  ${talk?"":`<div class="field"><label>Wothandiza / Householder ${studentGen?`(${studentGen==="brother"?"Brother":"Sister"} only)`:""}</label><select class="ministry-select" data-hall="${h}" data-kind="assistant">${eligiblePublishers("ministryAssistant",assistantFilter,p[h].assistant)}</select></div>`}</div></div>`
 }
 function renderMinistry(){
  const w=currentWeek();ministryParts.innerHTML=w.ministry.map((p,i)=>`<div class="part" data-id="${p.id}" data-i="${i}">
- <div class="parthead"><h3>${4+i}. <input class="m-title" value="${esc(p.title)}" style="display:inline-block;width:min(470px,70vw)"></h3><div class="row-actions"><input class="m-time" value="${esc(p.time)}" style="width:88px"><select class="m-type" style="width:150px"><option value="demonstration" ${p.type==="demonstration"?"selected":""}>Demonstration</option><option value="talk" ${p.type==="talk"?"selected":""}>Talk</option><option value="other" ${p.type==="other"?"selected":""}>Other</option></select><button class="small danger delete-ministry">Delete</button></div></div>
- ${ministryHallHTML(p,"main","Holo Yaikulu")}<div class="aux-only">${ministryHallHTML(p,"aux","Kalasi Yowonjezera")}</div></div>`).join("");
+ <div class="parthead"><h3>${4+i}. <input class="m-title" value="${esc(p.title)}" style="display:inline-block;width:min(470px,70vw)"></h3><div class="row-actions"><input class="m-time" value="${esc(p.time)}" style="width:88px"><select class="m-type" style="width:150px"><option value="demonstration" ${p.type==="demonstration"?"selected":""}>Demonstration</option><option value="talk" ${p.type==="talk"?"selected":""}>Talk</option><option value="discussion" ${p.type==="discussion"?"selected":""}>Discussion (main hall)</option><option value="other" ${p.type==="other"?"selected":""}>Other</option></select><button class="small danger delete-ministry">Delete</button></div></div>
+ ${ministryHallHTML(p,"main","Holo Yaikulu")}${p.type==="discussion"?"":`<div class="aux-only">${ministryHallHTML(p,"aux","Kalasi Yowonjezera")}</div>`}</div>`).join("");
  ministryParts.querySelectorAll(".m-title,.m-time").forEach(x=>x.addEventListener("input",()=>{collectFormToWeek()}));
- ministryParts.querySelectorAll(".m-type").forEach(x=>x.addEventListener("change",e=>{const p=w.ministry[+e.target.closest(".part").dataset.i];p.type=e.target.value;if(p.type==="talk"){["main","aux"].forEach(h=>{p[h].filter="brother";p[h].assistant=""})}saveState();renderSchedule()}));
+ ministryParts.querySelectorAll(".m-type").forEach(x=>x.addEventListener("change",e=>{const p=w.ministry[+e.target.closest(".part").dataset.i];p.type=e.target.value;if(["talk","discussion"].includes(p.type)){["main","aux"].forEach(h=>{p[h].filter="brother";p[h].assistant=""});if(p.type==="discussion")p.aux.student=""}saveState();renderSchedule()}));
  ministryParts.querySelectorAll(".filter").forEach(b=>b.addEventListener("click",()=>{const p=w.ministry[+b.closest(".part").dataset.i],h=b.dataset.hall;p[h].filter=b.dataset.filter;saveState();renderMinistry();toggleAux()}));
  ministryParts.querySelectorAll(".ministry-select").forEach(s=>s.addEventListener("change",()=>{
    const i=+s.closest(".part").dataset.i,p=w.ministry[i],h=s.dataset.hall,k=s.dataset.kind;
    const previous=p[h][k]||"",next=s.value;
    const partNo=4+i,hall=hallLabel(h),roleLabel=p.type==="talk"?"Wokamba":k==="assistant"?"Wothandiza":"Wophunzira";
    const newLabel=`Part ${partNo}: ${p.title||"[Title]"} (${roleLabel})${hall?" — "+hall:""}`;
-   const role=k==="assistant"?"ministryAssistant":p.type==="talk"?"ministryTalk":"ministryStudent";
+   const role=k==="assistant"?"ministryAssistant":p.type==="discussion"?"ministryDiscussion":p.type==="talk"?"ministryTalk":"ministryStudent";
    if(next&&next!==previous&&!confirmAdditionalAssignment(next,newLabel)){s.value=previous;return}
    if(next&&next!==previous&&!confirmRecentUsage(next,role,newLabel)){s.value=previous;return}
    p[h][k]=next;
-   if(k==="student"&&p.type!=="talk"){const g=studentGender(next),a=pubById(p[h].assistant);if(a&&g&&a.gender!==g)p[h].assistant=""}
+   if(k==="student"&&!["talk","discussion"].includes(p.type)){const g=studentGender(next),a=pubById(p[h].assistant);if(a&&g&&a.gender!==g)p[h].assistant=""}
    saveState();renderMinistry();toggleAux();renderConflicts()
  }));
  ministryParts.querySelectorAll(".delete-ministry").forEach(b=>b.addEventListener("click",()=>{if(w.ministry.length<=1)return alert("Keep at least one field ministry part.");w.ministry.splice(+b.closest(".part").dataset.i,1);saveState();renderSchedule()}))
@@ -507,7 +516,7 @@ function collectLiving(){const w=currentWeek();document.querySelectorAll("#livin
 function assignmentRecords(w){
  const f=w.fields,a=[];const add=(id,partNo,part,role,hall="")=>{if(id)a.push({publisherId:id,partNo,part,role,hall})};
  add(f.chairman,0,"Cheyamani","chairman");if(w.auxEnabled)add(f.auxCounselor,-1,"Mlangizi wa Kalasi Yowonjezera","counselor","aux");add(f.openingPrayer,0,"Pemphero Loyamba","prayer");add(f.p1person,1,f.p1title||"Part 1","treasuresTalk");add(f.p2person,2,"Kufufuza Cuma Cauzimu","spiritualGems");add(f.p3main,3,"Kuwerenga Baibo","bibleReading","main");if(w.auxEnabled)add(f.p3aux,3,"Kuwerenga Baibo","bibleReading","aux");
- w.ministry.forEach((p,i)=>{const n=4+i;["main",...(w.auxEnabled?["aux"]:[])].forEach(h=>{add(p[h].student,n,p.title,p.type==="talk"?"ministryTalk":"ministryStudent",h);if(p.type!=="talk")add(p[h].assistant,n,p.title,"ministryAssistant",h)})});
+ w.ministry.forEach((p,i)=>{const n=4+i;["main",...(w.auxEnabled&&p.type!=="discussion"?["aux"]:[])].forEach(h=>{add(p[h].student,n,p.title,p.type==="discussion"?"ministryDiscussion":p.type==="talk"?"ministryTalk":"ministryStudent",h);if(!["talk","discussion"].includes(p.type))add(p[h].assistant,n,p.title,"ministryAssistant",h)})});
  w.living.forEach((p,i)=>add(p.person,firstLivingNumber(w)+i,p.title,"livingTalk"));
  add(f.cbsConductor,cbsNo(w),"Phunzilo la Baibo la Mpingo","cbsConductor");add(f.cbsReader,cbsNo(w),"Phunzilo la Baibo la Mpingo","cbsReader");add(f.closingPrayer,99,"Pemphero Lothela","prayer");
  return a
@@ -559,11 +568,11 @@ function staticAssignmentLabel(select){
 }
 
 function conflictIssues(w=currentWeek()){
- const rec=assignmentRecords(w),issues=[];const by={};rec.forEach(r=>(by[r.publisherId]??=[]).push(r));
+ const rec=assignmentRecords(w),issues=[];for(const p of w.ministry)if(p.type==="discussion"&&(p.aux.student||p.aux.assistant||p.main.assistant))issues.push({level:"error",text:"Discussion must have one main-hall speaker only: "+p.title});const by={};rec.forEach(r=>(by[r.publisherId]??=[]).push(r));
  Object.entries(by).forEach(([id,arr])=>{if(arr.length>1)issues.push({level:"warn",text:`${pubName(id)} has ${arr.length} explicit assignments this week.`});
    const nums=arr.map(x=>x.partNo).filter(n=>n>0&&n<99).sort((a,b)=>a-b);for(let i=1;i<nums.length;i++)if(nums[i]-nums[i-1]<=1)issues.push({level:"warn",text:`${pubName(id)} has assignments in nearby parts ${nums[i-1]} and ${nums[i]}.`})
  });
- w.ministry.forEach((p,i)=>["main",...(w.auxEnabled?["aux"]:[])].forEach(h=>{if(p.type!=="talk"&&p[h].student&&p[h].student===p[h].assistant)issues.push({level:"error",text:`Part ${4+i} ${h}: student and assistant are the same person.`});if(p.type!=="talk"&&p[h].student&&p[h].assistant&&studentGender(p[h].student)!==studentGender(p[h].assistant))issues.push({level:"error",text:`Part ${4+i} ${h}: student and assistant must be the same gender.`})}));
+ w.ministry.forEach((p,i)=>["main",...(w.auxEnabled?["aux"]:[])].forEach(h=>{if(!["talk","discussion"].includes(p.type)&&p[h].student&&p[h].student===p[h].assistant)issues.push({level:"error",text:`Part ${4+i} ${h}: student and assistant are the same person.`});if(!["talk","discussion"].includes(p.type)&&p[h].student&&p[h].assistant&&studentGender(p[h].student)!==studentGender(p[h].assistant))issues.push({level:"error",text:`Part ${4+i} ${h}: student and assistant must be the same gender.`})}));
  if(w.auxEnabled)w.ministry.forEach((p,i)=>{["student","assistant"].forEach(k=>{if(p.main[k]&&p.main[k]===p.aux[k])issues.push({level:"error",text:`Part ${4+i}: ${pubName(p.main[k])} is assigned in both Main Hall and Auxiliary Classroom at the same time.`})})});
  rec.forEach(r=>{
   const p=pubById(r.publisherId),role=r.role;
@@ -895,11 +904,11 @@ function parseOfficialJwHtml(doc,startIso){
  const weekHead=heads.find(h=>h.tag==="H1"&&new RegExp(`${month}\\s*${day}(?:\\D|$)`,"i").test(h.text))||heads.find(h=>h.tag==="H1"&&compactMeetingText(h.text).includes(`${month.toLowerCase()}${day}`));
  if(!weekHead)throw new Error(`The official JW.org page loaded, but I could not find the ${month} ${day} week heading.`);
  const afterWeek=heads.filter(h=>h.i>weekHead.i);
- const readingHead=afterWeek.find(h=>h.tag==="H2"&&!sectionKey(h.text).includes("cumacopezeka")&&!sectionKey(h.text).includes("citanikhama")&&!sectionKey(h.text).includes("umoyowathu"));
+ const readingHead=afterWeek.find(h=>h.tag==="H2"&&!/cumacopezeka|cumacopeza|cumacopekeza/.test(sectionKey(h.text))&&!sectionKey(h.text).includes("citanikhama")&&!sectionKey(h.text).includes("umoyowathu"));
  const bibleReading=readingHead?.text||"";
- const treasureHead=afterWeek.find(h=>h.tag==="H2"&&sectionKey(h.text).includes("cumacopezeka"));
+ const treasureHead=afterWeek.find(h=>h.tag==="H2"&&/cumacopezeka|cumacopeza|cumacopekeza/.test(sectionKey(h.text)));
  const ministryHead=afterWeek.find(h=>h.tag==="H2"&&sectionKey(h.text).includes("citanikhamapaulaliki"));
- const livingHead=afterWeek.find(h=>h.tag==="H2"&&sectionKey(h.text).includes("umoyowathu")&&sectionKey(h.text).includes("cikhristu"));
+ const livingHead=afterWeek.find(h=>h.tag==="H2"&&sectionKey(h.text).includes("umoyowathu")&&/ci?khristu|chikhristu/.test(sectionKey(h.text)));
  if(!treasureHead||!ministryHead||!livingHead)throw new Error("The official JW.org page loaded, but its meeting section headings were not recognized.");
  const openingHeads=heads.filter(h=>h.tag==="H3"&&h.i>weekHead.i&&h.i<treasureHead.i);
  const openingText=openingHeads.map(h=>h.text).join(" | ");
@@ -921,7 +930,7 @@ function parseOfficialJwHtml(doc,startIso){
    if(q)scripture=clean(q[1]);
    if(!scripture){q=p3.details.match(/([A-ZÀ-Ž][A-Za-zÀ-ž.]{1,12}\s+\d+\s*:\s*[\d,;\-–—\s]+)/);if(q)scripture=clean(q[1])}
  }
- const ministry=ministryPartsRaw.filter(p=>p.num>=4).map(p=>({sourceNumber:p.num,title:p.title,time:((p.details.match(/Mph\.\s*(\d+)/i)||[])[1]||"5")+" min.",type:/\bNkhani\b|\bTalk\b/i.test(p.title)?"talk":"demonstration"}));
+ const ministry=ministryPartsRaw.filter(p=>p.num>=4).map(p=>({sourceNumber:p.num,title:p.title,details:p.details,time:((p.details.match(/Mph\.\s*(\d+)/i)||[])[1]||"5")+" min.",type:/\bNkhani\b|\bTalk\b/i.test(p.title)?"talk":"demonstration"}));
  const livingHeads=heads.filter(h=>h.tag==="H3"&&h.i>livingHead.i);
  let livingSong="",closingSong="",concludingComments="3 min.";
  const livingSongHead=livingHeads.find(h=>/^Nyimbo\s*\d+/i.test(h.text));
@@ -1052,7 +1061,10 @@ function mergeOfficialParsers(structured,textData,raw){
 }
 
 async function fetchWeekFromJw(startIso){
- const pageUrl=await findOfficialWeekPage(startIso),html=await fetchOfficialHtml(pageUrl),doc=new DOMParser().parseFromString(html,"text/html");
+ const pageUrl=await findOfficialWeekPage(startIso);return parseOfficialWeekPage(pageUrl,startIso,await fetchOfficialHtml(pageUrl))
+}
+function parseOfficialWeekPage(pageUrl,startIso,html){
+ const doc=new DOMParser().parseFromString(html,"text/html");
  const raw=doc.body?.innerText||doc.documentElement?.textContent||"";
  let structured=null,textData=null;
 
@@ -1245,7 +1257,7 @@ function finalizeWeek(){
 }
 function clearCurrentAssignments(){if(!confirm("Clear all assigned names for this week? Titles, songs, dates and scriptures will remain."))return;clearWeekAssignments(currentWeek());saveState();renderSchedule()}
 
-function exportBackup(){collectFormToWeek();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="S140_Meeting_Scheduler_v5_7_Backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+function exportBackup(){collectFormToWeek();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="S140_Meeting_Scheduler_v5_8_Backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
 function saveCheckpoint(){
  try{localStorage.setItem(CHECKPOINT_KEY,JSON.stringify(state));return true}
  catch(e){alert("Could not create a recovery checkpoint. Export a backup before trying again.");return false}
@@ -1411,10 +1423,10 @@ function buildPdfBlob(w){
    line(assignStart,y,assignStart,y+rowH);
 
    const speakerText=(h)=>{
-     const n=pubName(p[h].student)||"";
+     const n=p.type==="discussion"&&h==="aux"?"":pubName(p[h].student)||"";
      return p.type==="talk"&&n?`Wokamba: ${n}`:n
    };
-   const assistantText=(h)=>p.type==="talk"?"":(pubName(p[h].assistant)||"");
+   const assistantText=(h)=>["talk","discussion"].includes(p.type)?"":(pubName(p[h].assistant)||"");
 
    if(auxEnabled){
      const hallW=rem/2,subW=hallW/2;
@@ -1470,10 +1482,10 @@ function rotationSlots(w){
  }
  if(w.auxEnabled){add(["fields","auxCounselor"],"counselor","Auxiliary Counselor");add(["fields","p3aux"],"bibleReading","3. Bible Reading — Auxiliary Classroom")}
  w.ministry.forEach((p,i)=>{
-  if(!p.title||p.title==="[Title]"||!["demonstration","talk"].includes(p.type))return;
-  for(const h of w.auxEnabled?["main","aux"]:["main"]){
-   const prefix=["ministry",i,h],title=(4+i)+". "+p.title+" — "+hallLabel(h),filter=p.type==="talk"?"brother":p[h].filter||"all";
-   add([...prefix,"student"],p.type==="talk"?"ministryTalk":"ministryStudent",title+" — "+(p.type==="talk"?"Student talk":"Publisher"),{filter,partner:p.type==="talk"?null:[...prefix,"assistant"]});
+  if(!p.title||p.title==="[Title]"||!["demonstration","talk","discussion"].includes(p.type))return;
+  for(const h of w.auxEnabled&&p.type!=="discussion"?["main","aux"]:["main"]){
+   const prefix=["ministry",i,h],title=(4+i)+". "+p.title+" — "+hallLabel(h),filter=["talk","discussion"].includes(p.type)?"brother":p[h].filter||"all";
+   add([...prefix,"student"],p.type==="discussion"?"ministryDiscussion":p.type==="talk"?"ministryTalk":"ministryStudent",title+" — "+(p.type==="discussion"?"Discussion":p.type==="talk"?"Student talk":"Publisher"),{filter,partner:p.type==="demonstration"?[...prefix,"assistant"]:null});
    if(p.type==="demonstration")add([...prefix,"assistant"],"ministryAssistant",title+" — Householder",{filter,partner:[...prefix,"student"]});
   }
  });
@@ -1509,7 +1521,7 @@ function possibleRoles(p,w){
 function unscheduledParts(w){
  const out=[];
  if(!w.fields.p1title||w.fields.p1title==="[Title]")out.push("Part 1 — missing title");
- w.ministry.forEach((p,i)=>{if(!p.title||p.title==="[Title]"||!["demonstration","talk"].includes(p.type))out.push((4+i)+". "+(p.title||"Missing title")+" — verify part type/title")});
+ w.ministry.forEach((p,i)=>{if(!p.title||p.title==="[Title]"||!["demonstration","talk","discussion"].includes(p.type))out.push((4+i)+". "+(p.title||"Missing title")+" — verify part type/title")});
  w.living.forEach((p,i)=>{if(!p.title||p.title==="[Title]")out.push((firstLivingNumber(w)+i)+". Living as Christians — missing title")});
  return out;
 }
@@ -1600,6 +1612,175 @@ function applyRotation(){
  if(!saveCheckpoint())return;
  Object.assign(w,copy);saveState();$("rotationModal").classList.add("hidden");renderEverything();
 }
+const OFFICIAL_CATALOGUE="https://www.jw.org/nya/laibulale/kabuku-ka-misonkhano-mboni-za-yehova/";
+function officialLinks(html,base){
+ const doc=new DOMParser().parseFromString(html,"text/html"),out=new Set();
+ for(const a of doc.querySelectorAll("a[href]"))try{
+  const u=new URL(a.getAttribute("href"),base);
+  if(u.origin==="https://www.jw.org"&&u.pathname.startsWith(new URL(OFFICIAL_CATALOGUE).pathname)){u.search="";u.hash="";out.add(u.href)}
+ }catch{}
+ return [...out]
+}
+function publishedIssues(html){
+ return officialLinks(html,OFFICIAL_CATALOGUE).map(url=>{
+  const slug=new URL(url).pathname.split("/").filter(Boolean).pop();
+  const m=slug.match(/^([a-z]+)-([a-z]+)-(\d{4})-mwb$/i);if(!m)return null;
+  const month=MONTHS.findIndex(x=>x.toLowerCase()===m[1].toLowerCase());if(month<0)return null;
+  return{url,year:+m[3],month,first:m[3]+"-"+String(month+1).padStart(2,"0")+"-01"}
+ }).filter(Boolean).sort((a,b)=>a.first.localeCompare(b.first))
+}
+function publishedWeeks(html,issue){
+ const out=new Map();
+ for(const url of officialLinks(html,issue.url)){
+  if(!url.startsWith(issue.url)||url===issue.url)continue;
+  let slug;try{slug=decodeURIComponent(new URL(url).pathname.split("/").filter(Boolean).pop()).replace(/[\u200B-\u200D\uFEFF]/g,"")}catch{continue}
+  if(!/Ndandanda-ya-Msonkhano-wa-Umoyo-ndi-Utumiki/i.test(slug))continue;
+  const m=slug.match(new RegExp("("+MONTHS.join("|")+")-([0-9]{1,2})-","i"));if(!m)continue;
+  const month=MONTHS.findIndex(x=>x.toLowerCase()===m[1].toLowerCase());
+  const year=issue.year+(month<issue.month-1?1:0);
+  const date=year+"-"+String(month+1).padStart(2,"0")+"-"+String(+m[2]).padStart(2,"0");
+  const d=parseDate(date);if(!d||isoDate(d)!==date||d.getDay()!==1)continue;
+  out.set(date,{date,url});
+ }
+ return [...out.values()].sort((a,b)=>a.date.localeCompare(b.date))
+}
+async function fetchBatchOfficial(url){
+ if(location.protocol==="file:")throw Error("Open the online hosted app to fetch JW.org.");
+ const r=await fetch("/api/jw-proxy?url="+encodeURIComponent(url),{cache:"no-store",signal:AbortSignal.timeout(25000)});
+ if(!r.ok)throw Error("JW.org request returned "+r.status);
+ return await r.text()
+}
+async function discoverPublishedWeeks(from,fetcher=fetchBatchOfficial,progress=()=>{}){
+ const issues=publishedIssues(await fetcher(OFFICIAL_CATALOGUE));
+ if(!issues.length)throw Error("No published workbook issues could be identified. Nothing was changed.");
+ const chosen=issues.filter(i=>plusDays(i.first,70)>=from),weeks=new Map(),errors=[];
+ if(!chosen.length)throw Error("No published workbook issues cover the selected start date.");
+ for(const issue of chosen){
+  progress("Checking workbook "+issue.first.slice(0,7)+"…");
+  try{
+   const found=publishedWeeks(await fetcher(issue.url),issue);
+   if(!found.length)throw Error("No weekly links recognized");
+   for(const w of found)if(w.date>=from)weeks.set(w.date,w);
+  }catch(e){errors.push(issue.first.slice(0,7)+": "+e.message)}
+ }
+ return{weeks:[...weeks.values()].sort((a,b)=>a.date.localeCompare(b.date)),errors}
+}
+function batchProgramme(data,entry){
+ const required=["bibleReading","openingSong","p1title","p3scripture","livingSong","cbsReference","closingSong"];
+ const missing=required.filter(k=>!data[k]||data[k]==="[Title]");
+ if(data.startDate!==entry.date||data.endDate!==plusDays(entry.date,6))missing.push("week date");
+ if(!data.ministry?.length)missing.push("ministry parts");
+ if(!Array.isArray(data.living)||!data.living.length)missing.push("Living as Christians parts");
+ const numbers=[...(data.ministry||[]),...(data.living||[])].map(p=>p.sourceNumber);
+ if(numbers.some((n,i)=>n!==i+4))missing.push("part numbering");
+ if(missing.length)throw Error("Programme requires manual import: "+missing.join(", "));
+ // Do not assume unknown ministry headings are demonstrations.
+ const demo=/kuyambitsa makambilano|kubwelelako|kubwererako|kupanga ophunzila|kupanga ophunzira|making disciples|starting a conversation|following up/i;
+ data.ministry=data.ministry.map(p=>{
+  const title=clean(p.title),detail=clean(p.details||"").replace(/^\(Mph\.\s*\d+\)\s*/i,"");
+  let type="other";
+  if(/^\s*(nkhani|talk)\b/i.test(title))type="talk";
+  else if(/kodi mungakambe ciani|what would you say/i.test(title))type="discussion";
+  else if(demo.test(title))type="demonstration";
+  else if(/kufotokoza zimene mumakhulupila|kufotokoza zimene mumakhulupilila|explaining your beliefs/i.test(title)){
+   if(/^(nkhani|talk)\b/i.test(detail))type="talk";
+   else if(/^(citsanzo|chitsanzo|demonstration|onetseni|kambilanani|fotokozani|thandizani)\b/i.test(detail))type="demonstration";
+  }
+  return{...p,type}
+ });
+ return data
+}
+function planPublishedWeeks(base,programmes,allowRecent,aux){
+ // Work on a detached snapshot; the real state is restored even on errors.
+ const actual=state;state=JSON.parse(JSON.stringify(base));
+ const report=[],newIds=[];
+ try{
+  const congregation=state.weeks.find(w=>w.id===state.currentWeekId)?.congregation||"";
+  for(const {entry,data} of programmes.sort((a,b)=>a.entry.date.localeCompare(b.entry.date))){
+   const existing=state.weeks.filter(w=>w.startDate&&mondayOf(w.startDate)===entry.date);
+   if(existing.length>1){report.push({date:entry.date,status:"Skipped: duplicate local weeks",added:0,missing:[]});continue}
+   let w=existing[0];
+   if(w&&(w.archived||state.history.some(h=>h.weekId===w.id||(!h.weekId&&h.weekStart===w.startDate)))){report.push({date:entry.date,status:"Protected: archived/finalized",added:0,missing:[]});continue}
+   if(w){
+    if(w.startDate!==entry.date){report.push({date:entry.date,status:"Protected: existing week dates need review",added:0,missing:[]});continue}
+    // Never refresh a populated draft silently. Only use it when it already has the same official structure.
+    const same=clean(w.fields.p1title)===clean(data.p1title)&&clean(w.fields.p3scripture)===clean(data.p3scripture)&&w.ministry.length===data.ministry.length&&w.living.length===data.living.length&&w.ministry.every((p,i)=>clean(p.title)===clean(data.ministry[i].title)&&p.type===data.ministry[i].type)&&w.living.every((p,i)=>clean(p.title)===clean(data.living[i].title));
+    if(!same){
+     if(assignmentRecords(w).length||w.source||w.fields.p1title!=="[Title]"){report.push({date:entry.date,status:"Protected: existing programme differs; review manually",added:0,missing:[]});continue}
+     applyImportedData(w,data,false);
+    }
+   }else{
+    w=blankWeek(data.startDate,data.endDate,data.weekLabel);w.congregation=congregation;w.auxEnabled=aux;
+    applyImportedData(w,data,false);state.weeks.push(w);newIds.push(w.id);
+   }
+   if(conflictIssues(w).some(x=>x.level==="error")){report.push({date:entry.date,status:"Review existing assignment errors",added:0,missing:[]});continue}
+   const plan=buildRotationPlan(w,allowRecent),copy=JSON.parse(JSON.stringify(w));
+   for(const x of plan.suggestions){
+    if(slotValue(copy,x.slot.path)||!slotCandidates(copy,x.slot,allowRecent).some(p=>p.id===x.id))throw Error("Generated assignment failed validation in "+entry.date);
+    slotSet(copy,x.slot.path,x.id)
+   }
+   if(conflictIssues(copy).some(x=>x.level==="error"))throw Error("Generated schedule conflict in "+entry.date);
+   Object.assign(w,copy);
+   report.push({date:entry.date,status:plan.unfilled.length||plan.unclassified.length?"Partial draft":"Complete draft",added:plan.suggestions.length,recent:plan.recentCount,missing:[...plan.unfilled,...plan.unclassified],timedOut:plan.timedOut,weekId:w.id});
+  }
+  return{next:state,report,newIds}
+ }finally{state=actual}
+}
+let onlineSchedulePlan=null,onlineScheduleBusy=false;
+function openOnlineSchedule(){
+ if(onlineScheduleBusy)return;
+ collectFormToWeek();onlineSchedulePlan=null;
+ $("onlineScheduleFrom").value=mondayOf([new Date().getFullYear(),String(new Date().getMonth()+1).padStart(2,"0"),String(new Date().getDate()).padStart(2,"0")].join("-"));
+ $("onlineScheduleAux").value=currentWeek().auxEnabled?"yes":"no";
+ $("onlineScheduleRecent").checked=false;$("onlineScheduleVerified").checked=false;
+ $("onlineScheduleRun").disabled=true;$("onlineScheduleApply").disabled=true;
+ $("onlineScheduleStatus").textContent="Ready to search the official catalogue.";$("onlineScheduleResults").innerHTML="";
+ $("onlineScheduleModal").classList.remove("hidden")
+}
+async function runOnlineSchedule(){
+ if(onlineScheduleBusy||!$("onlineScheduleVerified").checked)return;
+ collectFormToWeek();const from=mondayOf($("onlineScheduleFrom").value);
+ if(!parseDate(from))return alert("Choose a valid starting week.");
+ const base=JSON.parse(JSON.stringify(state)),fingerprint=JSON.stringify(state),allow=$("onlineScheduleRecent").checked,aux=$("onlineScheduleAux").value==="yes";
+ onlineScheduleBusy=true;onlineSchedulePlan=null;$("onlineScheduleRun").disabled=true;$("onlineScheduleApply").disabled=true;$("onlineScheduleClose").disabled=true;
+ const status=$("onlineScheduleStatus"),progress=t=>{status.textContent=t};
+ $("onlineScheduleResults").innerHTML="";
+ try{
+  const found=await discoverPublishedWeeks(from,fetchBatchOfficial,progress),programmes=[],errors=found.errors.slice();
+  for(let i=0;i<found.weeks.length;i+=3){
+   const batch=found.weeks.slice(i,i+3);progress("Reading official programmes "+(i+1)+"–"+(i+batch.length)+" of "+found.weeks.length+"…");
+   const results=await Promise.allSettled(batch.map(async entry=>({entry,data:batchProgramme(parseOfficialWeekPage(entry.url,entry.date,await fetchBatchOfficial(entry.url)),entry)})));
+   results.forEach((r,j)=>{if(r.status==="fulfilled")programmes.push(r.value);else errors.push(batch[j].date+": "+r.reason.message)});
+  }
+  if(JSON.stringify(state)!==fingerprint)throw Error("Local data changed during discovery. Run again.");
+  progress("Allocating publishers across "+programmes.length+" verified programmes…");
+  await new Promise(r=>setTimeout(r,20));
+  const plan=planPublishedWeeks(base,programmes,allow,aux);
+  onlineSchedulePlan={...plan,fingerprint,errors,options:[from,allow,aux]};
+  const total=plan.report.reduce((n,r)=>n+r.added,0);
+  const gaps=[];const dates=new Set(found.weeks.map(w=>w.date));for(let day=from;found.weeks.length&&day<=found.weeks.at(-1).date;day=plusDays(day,7))if(!dates.has(day))gaps.push(day);
+  progress(found.weeks.length+" published weeks discovered; "+programmes.length+" programmes imported for review; "+total+" new assignments proposed. Nothing saved yet.");
+  const rendered=plan.report.map(r=>`<div class="week-item"><div><strong>${esc(r.date)} — ${esc(r.status)}</strong><div class="muted">${r.added} new assignments; ${r.missing.length} outstanding; ${r.recent||0} recent-use exceptions${r.timedOut?" · search limit reached":""}</div>${r.missing.length?`<details><summary>Outstanding roles / parts</summary>${r.missing.map(x=>"<div>"+esc(x)+"</div>").join("")}</details>`:""}${r.weekId?`<details><summary>Review proposed programme and assignments</summary>${batchReviewHtml(plan.next.weeks.find(w=>w.id===r.weekId))}</details>`:""}</div></div>`).join("");
+  $("onlineScheduleResults").innerHTML=rendered+(gaps.length?`<div class="notice warn">No published weekly programme link found for: ${gaps.map(esc).join(", ")}. Check for special events or missing publication links.</div>`:"")+(errors.length?`<div class="notice warn"><strong>Could not import automatically:</strong><br>${errors.map(esc).join("<br>")}</div>`:"");
+  $("onlineScheduleApply").disabled=JSON.stringify(plan.next)===fingerprint;
+ }catch(e){progress("Stopped: "+e.message+". Existing data unchanged.")}
+ finally{onlineScheduleBusy=false;$("onlineScheduleRun").disabled=!$("onlineScheduleVerified").checked;$("onlineScheduleClose").disabled=false}
+}
+function batchReviewHtml(w){
+ if(!w)return "";
+ const f=w.fields;
+ const lines=["Bible reading: "+w.bibleReading,"Opening song: "+f.openingSong,"1. "+f.p1title,"2. Spiritual Gems","3. Bible Reading: "+f.p3scripture,...w.ministry.map((p,i)=>(4+i)+". "+p.title+" ("+p.time+"; "+p.type+")"),"Living song: "+f.livingSong,...w.living.map((p,i)=>(firstLivingNumber(w)+i)+". "+p.title+" ("+p.time+")"),"Congregation Bible Study: "+f.cbsReference,"Closing song: "+f.closingSong];
+ return (w.source?.url?.startsWith(OFFICIAL_CATALOGUE)?`<a href="${esc(w.source.url)}" target="_blank" rel="noopener noreferrer">Open official programme</a>`:"")+lines.map(x=>"<div>"+esc(x)+"</div>").join("")+"<hr>"+assignmentRecords(w).map(x=>"<div>"+esc(currentAssignmentDescription(x))+" — "+esc(pubName(x.publisherId))+"</div>").join("")
+}
+function saveOnlineSchedule(){
+ if(!onlineSchedulePlan||onlineScheduleBusy)return;
+ collectFormToWeek();const plan=onlineSchedulePlan;
+ if(JSON.stringify(state)!==plan.fingerprint||!$("onlineScheduleVerified").checked||JSON.stringify(plan.options)!==JSON.stringify([mondayOf($("onlineScheduleFrom").value),$("onlineScheduleRecent").checked,$("onlineScheduleAux").value==="yes"]))return alert("Data or options changed. Generate again.");
+ if(!confirm("Save all reviewed weekly drafts? Existing names and finalized weeks are protected. No weeks will be finalized automatically."))return;
+ if(!saveCheckpoint())return;
+ try{localStorage.setItem(STORAGE_KEY,JSON.stringify(plan.next));state=plan.next}catch(e){return alert("Unable to save. Existing data is unchanged. Export a backup and check browser storage.")}
+ onlineSchedulePlan=null;$("onlineScheduleModal").classList.add("hidden");renderEverything();switchTab("weeksTab");alert("Weekly drafts saved. Review the Weeks tab before finalizing.");
+}
 function openAutoSchedule(){
  collectFormToWeek();const w=currentWeek();
  $("autoScheduleRecent").checked=false;$("autoScheduleVerified").checked=false;$("autoScheduleRun").disabled=true;
@@ -1653,6 +1834,7 @@ document.addEventListener("change",e=>{
 auxEnabled.onchange=()=>{currentWeek().auxEnabled=auxEnabled.checked;saveState();renderSchedule()};
 addMinistryBtn.onclick=()=>{currentWeek().ministry.push({id:uid("m"),title:"[Title]",time:"5 min.",type:"demonstration",main:{student:"",assistant:"",filter:"all"},aux:{student:"",assistant:"",filter:"all"}});saveState();renderSchedule()};
 addLivingBtn.onclick=()=>{currentWeek().living.push({id:uid("l"),title:"[Title]",time:"10 min.",person:""});saveState();renderSchedule()};
+$("onlineScheduleBtn").onclick=openOnlineSchedule;$("onlineScheduleWeeksBtn").onclick=openOnlineSchedule;$("onlineScheduleClose").onclick=()=>{if(!onlineScheduleBusy)$("onlineScheduleModal").classList.add("hidden")};$("onlineScheduleVerified").onchange=()=>{$("onlineScheduleRun").disabled=onlineScheduleBusy||!$("onlineScheduleVerified").checked;if(!$("onlineScheduleVerified").checked)$("onlineScheduleApply").disabled=true};$("onlineScheduleRun").onclick=runOnlineSchedule;$("onlineScheduleApply").onclick=saveOnlineSchedule;
 $("autoScheduleBtn").onclick=openAutoSchedule;$("autoScheduleClose").onclick=()=>$("autoScheduleModal").classList.add("hidden");$("autoScheduleVerified").onchange=()=>$("autoScheduleRun").disabled=!$("autoScheduleVerified").checked;$("autoScheduleRun").onclick=executeAutoSchedule;
 $("rotationBtn").onclick=openRotation;$("rotationCloseBtn").onclick=()=>$("rotationModal").classList.add("hidden");$("rotationRefreshBtn").onclick=recalculateRotation;$("rotationAllowRecent").onchange=recalculateRotation;$("rotationConfirmedTypes").onchange=()=>$("rotationApplyBtn").disabled=!rotationPlan?.suggestions.length||!$("rotationConfirmedTypes").checked;$("rotationPublisher").onchange=refreshRotationOptions;$("rotationApplyBtn").onclick=applyRotation;
 saveBtn.onclick=()=>{collectFormToWeek();alert("Saved on this device.")};pdfBtn.onclick=()=>{collectFormToWeek();downloadPdfForWeek(currentWeek())};previewBtn.onclick=previewPdf;previewDownloadBtn.onclick=()=>downloadPdfForWeek(currentWeek());closePreviewBtn.onclick=closePreview;printBtn.onclick=printCurrent;finalizeBtn.onclick=finalizeWeek;clearBtn.onclick=clearCurrentAssignments;
