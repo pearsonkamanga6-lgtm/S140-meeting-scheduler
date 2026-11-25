@@ -1,4 +1,4 @@
-# S-140 Meeting Scheduler v5.9 — Online schedule PDF review and download
+# S-140 Meeting Scheduler v6.0 — Local AI profile assistant and family pairing
 
 - Preserves assignments when refreshing matching meeting parts; changed parts require review.
 - Checks prior draft and finalized assignments and warns about future scheduled repetitions.
@@ -38,3 +38,9 @@ Run `npm start`; health endpoint: `/api/health`.
 - Preview or download all proposed weeks in one chronological landscape PDF, one page per week.
 - PDFs are generated from the proposed snapshot (not the currently open saved week) and marked as draft, including an incomplete warning when applicable.
 - Export does not save or finalize the schedule; existing review and save controls remain separate.
+
+## Publisher profile chat
+- Describe observable strengths, review and confirm extracted ability profiles; optional browser on-device LanguageModel, local rules otherwise. Local speech recognition only, when supported.
+- Match confirmed strengths and experience to estimated assignment difficulty, with manual overrides and reasons; no age, title, pioneer status or inferred personality scoring. Qualifications remain mandatory.
+- Confirm reciprocal family links explicitly; mixed-gender demonstrations are permitted only for verified family members.
+- Notes remain in device storage and exported backups, not PDFs or remote AI requests. Avoid confidential personal details. Existing public seed names remain a separate privacy issue.
