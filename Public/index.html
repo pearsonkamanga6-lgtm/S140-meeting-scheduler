@@ -59,7 +59,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
 <body>
 <div class="app">
  <div class="topbar">
-  <div class="brand"><h1>S-140 Meeting Scheduler <span style="font-size:.72rem;background:#173f49;color:#fff;padding:3px 7px;border-radius:999px;vertical-align:middle">v5.5</span></h1><small>Ndandanda ya msonkhano • Cinyanja</small></div>
+  <div class="brand"><h1>S-140 Meeting Scheduler <span style="font-size:.72rem;background:#173f49;color:#fff;padding:3px 7px;border-radius:999px;vertical-align:middle">v5.6</span></h1><small>Ndandanda ya msonkhano • Cinyanja</small></div>
   <div class="tabs">
    <button class="tabbtn active" data-tab="scheduleTab">Schedule</button>
    <button class="tabbtn" data-tab="weeksTab">Weeks</button>
@@ -71,7 +71,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
  </div>
 
  <section id="scheduleTab" class="tab">
-  <div id="versionBanner" class="notice ok" style="margin-top:14px"><strong>Running version:</strong> v5.5. Reliability, recovery and assignment checks.</div><div id="standaloneBanner" class="notice warn hidden" style="margin-top:14px"><strong>Standalone mode:</strong> PDF import works, but JW.org automatic fetch needs online mode. Extract the application ZIP and double-click <strong>START_S140_ONLINE.bat</strong>.</div>
+  <div id="versionBanner" class="notice ok" style="margin-top:14px"><strong>Running version:</strong> v5.6. Intelligent rotation and assignment review.</div><div id="standaloneBanner" class="notice warn hidden" style="margin-top:14px"><strong>Standalone mode:</strong> PDF import works, but JW.org automatic fetch needs online mode. Extract the application ZIP and double-click <strong>START_S140_ONLINE.bat</strong>.</div>
   <div class="card">
    <div class="weekbar">
     <strong>Week:</strong>
@@ -86,7 +86,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
   </div>
 
   <div class="toolbar">
-   <button class="primary" id="saveBtn">Save</button>
+   <button class="primary" id="saveBtn">Save</button><button class="primary" id="rotationBtn">Intelligent Auto Assign</button>
    <button class="pdfbtn" id="pdfBtn">Download PDF</button>
    <button id="previewBtn">PDF Preview</button>
    <button id="printBtn">Print</button>
@@ -115,7 +115,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
     <div class="field"><label>Mau Oyamba</label><input id="openingComments" value="1 min."><div class="smalltext muted">Cheyamani’s name appears automatically.</div></div>
    </div>
    <div id="conflictBox"></div>
-   <div class="notice ok"><strong>Role-specific memory:</strong> Each dropdown considers past planned and finalized weeks; recent assignments in other roles can also trigger a warning.</div>
+   <div class="notice ok"><strong>Assignment rotation:</strong> All roles count toward the two-week rest preference, including publisher and householder roles. Existing assignments are never overwritten by Auto Assign.</div>
   </div>
 
   <div class="section treasures">
@@ -262,9 +262,18 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
  <iframe id="previewFrame"></iframe>
 </div></div>
 
+<div id="rotationModal" class="modal hidden"><div class="modal-card">
+ <div class="modal-head"><h2>Intelligent Assignment Review</h2><button id="rotationCloseBtn" class="closebtn">Close</button></div>
+ <p>Review the workbook part types and each publisher's approved eligibility before applying. Existing names are never replaced. Recent use means an assignment in any role in the preceding two weeks.</p>
+ <label class="switchrow"><input id="rotationAllowRecent" type="checkbox">Allow recent publishers if necessary (review carefully)</label>
+ <label class="switchrow"><input id="rotationConfirmedTypes" type="checkbox">I have checked the meeting parts and their types against the workbook.</label>
+ <div class="toolbar"><button id="rotationRefreshBtn">Recalculate recommendations</button><button id="rotationApplyBtn" class="primary" disabled>Apply reviewed suggestions</button></div>
+ <div id="rotationResults"></div>
+ <h3>Find possible roles for a publisher</h3><select id="rotationPublisher"></select><div id="rotationOptions"></div>
+ </div></div>
 <script>
 const SEED=[["Aaron Mzumara", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Amos Mzumara", "brother", ["prayer", "bibleReading", "ministryStudent", "ministryAssistant"]], ["Anastasia Mwandira", "sister", ["ministryStudent", "ministryAssistant"]], ["Beauty Banda", "sister", ["ministryStudent", "ministryAssistant"]], ["Biliat Phiri", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Chanda Mulenga", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Edson Daka", "brother", ["prayer", "bibleReading", "ministryStudent", "ministryAssistant"]], ["Edwin Mwanza", "brother", ["prayer", "bibleReading", "ministryStudent", "ministryAssistant"]], ["George Banda", "brother", ["prayer", "treasuresTalk", "spiritualGems", "bibleReading"]], ["Innocent Phiri", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Isaac Tembo", "brother", ["bibleReading", "ministryStudent", "ministryAssistant"]], ["Joyce Zulu", "sister", ["ministryStudent", "ministryAssistant"]], ["kondwan Mwandira", "brother", ["prayer", "bibleReading", "ministryStudent", "ministryAssistant"]], ["Laston Nyirongo", "brother", ["prayer", "ministryStudent", "ministryAssistant"]], ["Lotti Phiri", "brother", ["prayer", "treasuresTalk", "spiritualGems", "bibleReading"]], ["Mbewe Fransis", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Mbunge Elijah", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Nakiwe Mwanza", "sister", ["ministryStudent", "ministryAssistant"]], ["Nelia Chirwa", "sister", ["ministryStudent", "ministryAssistant"]], ["Pearson Kamanga", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Rosalyn Nkwazi", "sister", ["ministryStudent", "ministryAssistant"]], ["Royd Kalule", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Saulos Phiri", "brother", ["prayer", "treasuresTalk", "spiritualGems", "bibleReading"]], ["Treser Njobvu", "sister", ["ministryStudent", "ministryAssistant"]], ["Victor Banda", "brother", ["bibleReading", "ministryStudent", "ministryAssistant", "cbsReader"]], ["victoria Mbewe", "sister", ["ministryStudent", "ministryAssistant"]]];
-const ROLE_LABELS={chairman:"Chairman",counselor:"Auxiliary Classroom Counselor",prayer:"Prayer",treasuresTalk:"Treasures talk",spiritualGems:"Spiritual Gems",bibleReading:"Bible Reading",ministryStudent:"Field Ministry Student",ministryAssistant:"Field Ministry Assistant",livingTalk:"Living as Christians talk",cbsConductor:"CBS Conductor",cbsReader:"CBS Reader"};
+const ROLE_LABELS={chairman:"Chairman",counselor:"Auxiliary Classroom Counselor",prayer:"Prayer",treasuresTalk:"Treasures talk",spiritualGems:"Spiritual Gems",bibleReading:"Bible Reading",ministryStudent:"Publisher / Student (Wophunzira)",ministryAssistant:"Householder / Assistant (Wothandiza)",livingTalk:"Living as Christians talk",cbsConductor:"CBS Conductor",cbsReader:"CBS Reader"};
 const BROTHER_ONLY=new Set(["chairman","counselor","prayer","treasuresTalk","spiritualGems","bibleReading","livingTalk","cbsConductor","cbsReader"]);
 const STORAGE_KEY="s140Scheduler";
 const CHECKPOINT_KEY=STORAGE_KEY+":recovery";
@@ -372,46 +381,38 @@ function recentUsageInfo(pubId,week,role){
 function formatRecentWarning(name,info,newLabel){
  const e=info.entry;
  const when=info.weeks===0?"recently (this past week)":info.weeks===1?"last week":info.weeks===2?"2 weeks ago":`${info.weeks} weeks ago`;
- const lastPart=e.part||e.role||"assignment";
+ const lastPart=(e.part||"assignment")+" — "+rotationRoleLabel(e.role);
  const lastWeek=e.weekLabel||e.weekStart||"";
  return `${name} was used ${when}.\n\nLast: ${lastPart} (${lastWeek})\nAssigning now: ${newLabel}\n\nThis person was used ${when}. Continue to use ${name}?`;
 }
 function confirmRecentUsage(pubId,role,newLabel){
  if(!pubId)return true;
- const w=currentWeek();
- // Check role-specific recent usage within 2 weeks
- const info=recentUsageInfo(pubId,w,role);
- if(!info)return true;
- if(info.weeks!==null && info.weeks<=2){
-   const name=pubName(pubId)||"This publisher";
-   return confirm(formatRecentWarning(name,info,newLabel));
- }
- return true;
+ const info=recentUsageInfo(pubId,currentWeek(),null);
+ return !(info&&info.weeks!==null&&info.weeks<=2)||confirm(formatRecentWarning(pubName(pubId)||"This publisher",info,newLabel));
 }
-function confirmRecentUsageGeneral(pubId,role,newLabel){
- if(!pubId)return true;
- const w=currentWeek(),same=recentUsageInfo(pubId,w,role);
- if(same&&same.weeks!==null&&same.weeks<=2)return true;
- const info=recentUsageInfo(pubId,w,null);
- if(!info||info.weeks===null||info.weeks>1)return true;
- return confirm(formatRecentWarning(pubName(pubId)||"This publisher",info,newLabel));
+function rotationRoleLabel(role){return role==="ministryTalk"?"Student talk":ROLE_LABELS[role]||role||"Assignment"}
+function lastAnyUsage(p,w){return recentUsageInfo(p.id,w,null)}
+function lastUsageLabel(p,w){
+ const r=lastAnyUsage(p,w);if(!r)return "No recorded earlier assignment";
+ const when=r.weeks===0?"RECENTLY":r.weeks===1?"LAST WEEK":r.weeks===2?"2 WEEKS AGO":r.weeks===null?"Previous assignment":r.weeks+" weeks ago";
+ return when+" · "+rotationRoleLabel(r.entry.role);
+}
+function rotationCompare(a,b,w,role){
+ const ah=historyBefore(a.id,w),bh=historyBefore(b.id,w);
+ const date=h=>String(h[0]?.weekStart||h[0]?.date||"");
+ const recentCount=h=>h.filter(x=>(w.startDate||"")<=plusDays(x.weekStart||String(x.date||"").slice(0,10),56)).length;
+ return date(ah).localeCompare(date(bh))||recentCount(ah)-recentCount(bh)||date(historyBefore(a.id,w,role)).localeCompare(date(historyBefore(b.id,w,role)))||a.name.localeCompare(b.name)||a.id.localeCompare(b.id);
 }
 function eligiblePublishers(role,filter="all",selected="",historyRole=null){
  const w=currentWeek(),hr=historyRole||role;
  let arr=state.publishers.filter(p=>isEligible(p,role,w)).filter(p=>filter==="all"||p.gender===filter);
- arr.sort((a,b)=>{
-   const ah=historyBefore(a.id,w,hr),bh=historyBefore(b.id,w,hr);
-   if(!ah.length&&!bh.length)return a.name.localeCompare(b.name);
-   if(!ah.length)return-1;
-   if(!bh.length)return 1;
-   return String(ah[0].weekStart||ah[0].date||"").localeCompare(String(bh[0].weekStart||bh[0].date||""))||a.name.localeCompare(b.name)
- });
+ arr.sort((a,b)=>rotationCompare(a,b,w,hr));
  const retained=selected&&!arr.some(p=>p.id===selected)?`<option value="${esc(selected)}" selected>⚠ ${esc(pubName(selected)||"Unknown publisher")} — review eligibility</option>`:"";
  return '<option value="">— Select —</option>'+retained+arr.map(p=>{
-   const ri=recentUsageInfo(p.id,w,hr);
+   const ri=lastAnyUsage(p,w);
    const isRecent=ri && ri.weeks!==null && ri.weeks<=2;
    const warn=isRecent?" ⚠️ USED "+(ri.weeks===0?"RECENTLY":ri.weeks===1?"LAST WEEK":ri.weeks+"W AGO")+" - ":"";
-   return `<option value="${p.id}" ${p.id===selected?"selected":""}>${esc(warn+p.name)} — ${esc(guidance(p.id,w,hr))}</option>`
+   return `<option value="${p.id}" ${p.id===selected?"selected":""}>${esc(warn+p.name)} — ${esc(lastUsageLabel(p,w))}</option>`
  }).join("")
 }
 function firstLivingNumber(w=currentWeek()){return 4+w.ministry.length}
@@ -453,8 +454,8 @@ function studentGender(id){return pubById(id)?.gender||""}
 function ministryHallHTML(p,h,label){
  const talk=p.type==="talk",studentId=p[h].student,studentGen=studentGender(studentId),baseFilter=talk?"brother":(p[h].filter||"all"),assistantFilter=studentGen||baseFilter;
  return`<div class="hall"><h4>${label}</h4>${talk?'<span class="badge">Talk — brothers only</span>':`<div class="filters"><button class="filter ${baseFilter==="all"?"active":""}" data-hall="${h}" data-filter="all">All</button><button class="filter ${baseFilter==="brother"?"active":""}" data-hall="${h}" data-filter="brother">Brothers</button><button class="filter ${baseFilter==="sister"?"active":""}" data-hall="${h}" data-filter="sister">Sisters</button></div>`}
- <div class="${talk?"":"grid2"}"><div class="field"><label>${talk?"Wokamba / Speaker":"Wophunzira / Student"}</label><select class="ministry-select" data-hall="${h}" data-kind="student">${eligiblePublishers("ministryStudent",baseFilter,studentId,talk?"ministryTalk":"ministryStudent")}</select></div>
- ${talk?"":`<div class="field"><label>Wothandiza / Assistant ${studentGen?`(${studentGen==="brother"?"Brother":"Sister"} only)`:""}</label><select class="ministry-select" data-hall="${h}" data-kind="assistant">${eligiblePublishers("ministryAssistant",assistantFilter,p[h].assistant)}</select></div>`}</div></div>`
+ <div class="${talk?"":"grid2"}"><div class="field"><label>${talk?"Wokamba / Speaker":"Wophunzira / Publisher"}</label><select class="ministry-select" data-hall="${h}" data-kind="student">${eligiblePublishers("ministryStudent",baseFilter,studentId,talk?"ministryTalk":"ministryStudent")}</select></div>
+ ${talk?"":`<div class="field"><label>Wothandiza / Householder ${studentGen?`(${studentGen==="brother"?"Brother":"Sister"} only)`:""}</label><select class="ministry-select" data-hall="${h}" data-kind="assistant">${eligiblePublishers("ministryAssistant",assistantFilter,p[h].assistant)}</select></div>`}</div></div>`
 }
 function renderMinistry(){
  const w=currentWeek();ministryParts.innerHTML=w.ministry.map((p,i)=>`<div class="part" data-id="${p.id}" data-i="${i}">
@@ -471,7 +472,6 @@ function renderMinistry(){
    const role=k==="assistant"?"ministryAssistant":p.type==="talk"?"ministryTalk":"ministryStudent";
    if(next&&next!==previous&&!confirmAdditionalAssignment(next,newLabel)){s.value=previous;return}
    if(next&&next!==previous&&!confirmRecentUsage(next,role,newLabel)){s.value=previous;return}
-   if(next&&next!==previous&&!confirmRecentUsageGeneral(next,role,newLabel)){s.value=previous;return}
    p[h][k]=next;
    if(k==="student"&&p.type!=="talk"){const g=studentGender(next),a=pubById(p[h].assistant);if(a&&g&&a.gender!==g)p[h].assistant=""}
    saveState();renderMinistry();toggleAux();renderConflicts()
@@ -488,7 +488,6 @@ function renderLiving(){
    const label=`Part ${firstLivingNumber(w)+i}: ${p.title||"[Title]"}`;
    if(next&&next!==previous&&!confirmAdditionalAssignment(next,label)){x.value=previous;return}
    if(next&&next!==previous&&!confirmRecentUsage(next,"livingTalk",label)){x.value=previous;return}
-   if(next&&next!==previous&&!confirmRecentUsageGeneral(next,"livingTalk",label)){x.value=previous;return}
    p.person=next;saveState();renderConflicts()
  }));
  livingParts.querySelectorAll(".delete-living").forEach(b=>b.addEventListener("click",()=>{if(w.living.length<=1)return alert("Keep at least one Living as Christians part.");w.living.splice(+b.closest(".part").dataset.i,1);saveState();renderSchedule()}))
@@ -573,12 +572,12 @@ function conflictIssues(w=currentWeek()){
  // Consider later draft weeks as well when scheduling out of order.
  const nextWeeks=state.weeks.filter(x=>x.id!==w.id&&!x.archived&&x.startDate>w.startDate&&x.startDate<=plusDays(w.startDate,14));
  rec.forEach(r=>{for(const next of nextWeeks){
-   const future=assignmentRecords(next).find(x=>x.publisherId===r.publisherId&&x.role===r.role);
-   if(future)issues.push({level:"warn",text:`${pubName(r.publisherId)} already has a similar assignment in ${next.label}.`});
+   const future=assignmentRecords(next).find(x=>x.publisherId===r.publisherId);
+   if(future)issues.push({level:"warn",text:`${pubName(r.publisherId)} already has an assignment in ${next.label}.`});
  }});
  // Recent usage warnings (last 2 weeks)
  rec.forEach(r=>{
-   const info=recentUsageInfo(r.publisherId,w,r.role);
+   const info=recentUsageInfo(r.publisherId,w,null);
    if(info && info.weeks!==null && info.weeks<=2){
      const when=info.weeks===0?"recently":info.weeks===1?"last week":`${info.weeks} weeks ago`;
      issues.push({level:"warn",text:`⚠️ ${pubName(r.publisherId)} was used ${when} (${info.entry.weekLabel||info.entry.weekStart} - ${info.entry.part}). Consider using someone else or confirm to continue.`});
@@ -1236,7 +1235,7 @@ function finalizeWeek(){
 }
 function clearCurrentAssignments(){if(!confirm("Clear all assigned names for this week? Titles, songs, dates and scriptures will remain."))return;clearWeekAssignments(currentWeek());saveState();renderSchedule()}
 
-function exportBackup(){collectFormToWeek();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="S140_Meeting_Scheduler_v5_5_Backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+function exportBackup(){collectFormToWeek();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="S140_Meeting_Scheduler_v5_6_Backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
 function saveCheckpoint(){
  try{localStorage.setItem(CHECKPOINT_KEY,JSON.stringify(state));return true}
  catch(e){alert("Could not create a recovery checkpoint. Export a backup before trying again.");return false}
@@ -1452,6 +1451,112 @@ function previewPdf(){collectFormToWeek();const url=URL.createObjectURL(buildPdf
 function closePreview(){const u=previewWrap.dataset.url;if(u)URL.revokeObjectURL(u);previewWrap.classList.add("hidden");previewFrame.src="about:blank"}
 function printCurrent(){collectFormToWeek();const url=URL.createObjectURL(buildPdfBlob(currentWeek()));const w=window.open(url,"_blank");if(!w)return alert("Your browser blocked the print preview. Use Download PDF instead.");setTimeout(()=>{try{w.print()}catch(e){}},1000)}
 
+function rotationSlots(w){
+ const out=[],f=w.fields;
+ const add=(path,role,label,extra={})=>out.push({path,role,label,...extra});
+ for(const [key,role,label] of [["chairman","chairman","Cheyamani"],["openingPrayer","prayer","Pemphero Loyamba"],["p1person","treasuresTalk","1. Treasures talk"],["p2person","spiritualGems","2. Spiritual Gems"],["p3main","bibleReading","3. Bible Reading — Main Hall"],["cbsConductor","cbsConductor","CBS Conductor"],["cbsReader","cbsReader","CBS Reader"],["closingPrayer","prayer","Pemphero Lothela"]]){
+  if(key==="p1person"&&(!f.p1title||f.p1title==="[Title]"))continue;
+  add(["fields",key],role,label);
+ }
+ if(w.auxEnabled){add(["fields","auxCounselor"],"counselor","Auxiliary Counselor");add(["fields","p3aux"],"bibleReading","3. Bible Reading — Auxiliary Classroom")}
+ w.ministry.forEach((p,i)=>{
+  if(!p.title||p.title==="[Title]"||!["demonstration","talk"].includes(p.type))return;
+  for(const h of w.auxEnabled?["main","aux"]:["main"]){
+   const prefix=["ministry",i,h],title=(4+i)+". "+p.title+" — "+hallLabel(h),filter=p.type==="talk"?"brother":p[h].filter||"all";
+   add([...prefix,"student"],p.type==="talk"?"ministryTalk":"ministryStudent",title+" — "+(p.type==="talk"?"Student talk":"Publisher"),{filter,partner:p.type==="talk"?null:[...prefix,"assistant"]});
+   if(p.type==="demonstration")add([...prefix,"assistant"],"ministryAssistant",title+" — Householder",{filter,partner:[...prefix,"student"]});
+  }
+ });
+ w.living.forEach((p,i)=>{if(p.title&&p.title!=="[Title]")add(["living",i,"person"],"livingTalk",(firstLivingNumber(w)+i)+". "+p.title)});
+ return out;
+}
+function slotValue(w,path){return path.reduce((x,k)=>x?.[k],w)||""}
+function slotSet(w,path,id){const parent=path.slice(0,-1).reduce((x,k)=>x[k],w);parent[path[path.length-1]]=id}
+function slotCandidates(w,slot,allowRecent=false){
+ const used=new Set(assignmentRecords(w).map(x=>x.publisherId)),partner=slot.partner?pubById(slotValue(w,slot.partner)):null;
+ if(slot.partner&&slotValue(w,slot.partner)&&!partner)return [];
+ return state.publishers.filter(p=>{
+  if(used.has(p.id)||!isEligible(p,slot.role==="ministryTalk"?"ministryStudent":slot.role,w))return false;
+  if(slot.filter&&slot.filter!=="all"&&p.gender!==slot.filter)return false;
+  if(partner&&p.gender!==partner.gender)return false;
+  const prev=lastAnyUsage(p,w);
+  const nearFuture=state.weeks.some(x=>x.id!==w.id&&!x.archived&&x.startDate>w.startDate&&x.startDate<=plusDays(w.startDate,14)&&assignmentRecords(x).some(r=>r.publisherId===p.id));
+  return allowRecent||(!(prev&&prev.weeks!==null&&prev.weeks<=2)&&!nearFuture);
+ }).sort((a,b)=>{
+  const recent=p=>{const r=lastAnyUsage(p,w);return (r&&r.weeks!==null&&r.weeks<=2?1:0)+(state.weeks.some(x=>x.id!==w.id&&!x.archived&&x.startDate>w.startDate&&x.startDate<=plusDays(w.startDate,14)&&assignmentRecords(x).some(r=>r.publisherId===p.id))?1:0)};
+  return recent(a)-recent(b)||rotationCompare(a,b,w,slot.role)
+ });
+}
+function possibleRoles(p,w){
+ const copy=JSON.parse(JSON.stringify(w)),slots=rotationSlots(copy);
+ return slots.filter(slot=>{
+  if(slotValue(copy,slot.path)||!slotCandidates(copy,slot,true).some(x=>x.id===p.id))return false;
+  if(!slot.partner||slotValue(copy,slot.partner))return true;
+  const partner=slots.find(x=>JSON.stringify(x.path)===JSON.stringify(slot.partner));if(!partner)return false;
+  slotSet(copy,slot.path,p.id);const ok=slotCandidates(copy,partner,true).length>0;slotSet(copy,slot.path,"");return ok;
+ });
+}
+function buildRotationPlan(original,allowRecent=false){
+ const w=JSON.parse(JSON.stringify(original)),slots=rotationSlots(w),suggestions=[],unfilled=[];
+ // Work with the most constrained slot or same-gender pair first.
+ const pending=slots.filter(s=>!slotValue(w,s.path));
+ while(pending.length){
+  const choices=pending.map(s=>{
+   const candidates=slotCandidates(w,s,allowRecent);
+   const partner=s.partner&&!slotValue(w,s.partner)?pending.find(x=>JSON.stringify(x.path)===JSON.stringify(s.partner)):null;
+   const pairs=[];
+   for(const p of candidates){
+    if(!partner){pairs.push([p,null]);continue}
+    slotSet(w,s.path,p.id);
+    for(const q of slotCandidates(w,partner,allowRecent))pairs.push([p,q]);
+    slotSet(w,s.path,"");
+   }
+   return{s,partner,pairs};
+  }).sort((a,b)=>a.pairs.length-b.pairs.length);
+  const {s,partner,pairs}=choices[0];
+  pending.splice(pending.indexOf(s),1);if(partner)pending.splice(pending.indexOf(partner),1);
+  if(!pairs.length){unfilled.push(s.label);if(partner)unfilled.push(partner.label);continue}
+  const [p,q]=pairs[0];
+  slotSet(w,s.path,p.id);suggestions.push({slot:s,id:p.id});
+  if(partner&&q){slotSet(w,partner.path,q.id);suggestions.push({slot:partner,id:q.id})}
+ }
+ return{suggestions,unfilled};
+}
+let rotationPlan=null;
+function rotationFingerprint(){return JSON.stringify({week:currentWeek(),publishers:state.publishers,weeks:state.weeks,history:state.history})}
+function refreshRotationOptions(){
+ const p=pubById($("rotationPublisher").value),w=currentWeek(),target=$("rotationOptions");
+ if(!p){target.textContent="Choose a publisher to see possible assignments.";return}
+ const roles=possibleRoles(p,w),recent=lastUsageLabel(p,w);
+ const eligible=Object.keys(ROLE_LABELS).filter(r=>isEligible(p,r,w));
+ target.innerHTML=`<div class="notice ${lastAnyUsage(p,w)?.weeks<=2?"warn":"ok"}">${esc(recent)}</div><p><strong>Approved and available roles:</strong> ${esc(eligible.map(rotationRoleLabel).join(", ")||"None")}</p><p><strong>Possible unfilled assignments:</strong></p>`+(roles.length?roles.map(r=>`<div class="history-row"><div>${esc(r.label)}</div><div>${esc(rotationRoleLabel(r.role))}</div><div>${slotCandidates(w,r,false).some(x=>x.id===p.id)?"Recommended":"Recent use — review"}</div></div>`).join(""):"<p>No compatible vacant assignment this week.</p>");
+}
+function recalculateRotation(){
+ collectFormToWeek();const w=currentWeek(),allow=$("rotationAllowRecent").checked;
+ rotationPlan={...buildRotationPlan(w,allow),fingerprint:rotationFingerprint(),allow};
+ const {suggestions,unfilled}=rotationPlan;
+ $("rotationResults").innerHTML=`<div class="notice ok">${suggestions.length} suggested assignments; ${unfilled.length} eligible slots still unfilled. Blank or unclassified parts are not automatically assigned.</div>`+suggestions.map(x=>`<div class="history-row"><div>${esc(x.slot.label)}</div><div><strong>${esc(pubName(x.id))}</strong></div><div>${esc(lastUsageLabel(pubById(x.id),w)+(slotCandidates(w,x.slot,false).some(p=>p.id===x.id)?"":" · Review recent/nearby use"))}</div></div>`).join("")+(unfilled.length?`<div class="notice warn"><strong>Needs manual review:</strong><br>${unfilled.map(esc).join("<br>")}</div>`:"");
+ $("rotationApplyBtn").disabled=!suggestions.length||!$("rotationConfirmedTypes").checked;
+ refreshRotationOptions();
+}
+function openRotation(){
+ collectFormToWeek();$("rotationAllowRecent").checked=false;$("rotationConfirmedTypes").checked=false;
+ $("rotationPublisher").innerHTML='<option value="">Select publisher</option>'+state.publishers.filter(p=>p.active).sort((a,b)=>a.name.localeCompare(b.name)).map(p=>`<option value="${esc(p.id)}">${esc(p.name)}</option>`).join("");
+ $("rotationModal").classList.remove("hidden");recalculateRotation();
+}
+function applyRotation(){
+ collectFormToWeek();if(!rotationPlan||rotationFingerprint()!==rotationPlan.fingerprint||$("rotationAllowRecent").checked!==rotationPlan.allow)return alert("Schedule or publisher data changed. Recalculate first.");
+ if(!$("rotationConfirmedTypes").checked)return alert("Review workbook part types first.");
+ const w=currentWeek(),copy=JSON.parse(JSON.stringify(w));
+ for(const x of rotationPlan.suggestions){
+  if(slotValue(copy,x.slot.path)||!slotCandidates(copy,x.slot,rotationPlan.allow).some(p=>p.id===x.id))return alert("A proposed assignment is no longer valid. Recalculate.");
+  slotSet(copy,x.slot.path,x.id);
+ }
+ if(conflictIssues(copy).some(x=>x.level==="error"))return alert("Resolve current assignment conflicts before applying.");
+ if(!confirm("Apply "+rotationPlan.suggestions.length+" suggestions without changing existing assignments?"))return;
+ if(!saveCheckpoint())return;
+ Object.assign(w,copy);saveState();$("rotationModal").classList.add("hidden");renderEverything();
+}
 function renderEverything(){renderEligibility();renderTemplateSelectors();renderSchedule();renderWeeks();renderPublishers();renderTemplates()}
 const weekSelector=$("weekSelector"),weekStatus=$("weekStatus"),archiveWeekBtn=$("archiveWeekBtn"),weekLabel=$("weekLabel"),weekStart=$("weekStart"),weekEnd=$("weekEnd"),congregation=$("congregation"),bibleReading=$("bibleReading"),auxEnabled=$("auxEnabled"),auxCounselorWrap=$("auxCounselorWrap"),ministryParts=$("ministryParts"),livingParts=$("livingParts"),cbsNumber=$("cbsNumber"),conflictBox=$("conflictBox"),weekSearch=$("weekSearch"),weekFilter=$("weekFilter"),weekSort=$("weekSort"),weeksList=$("weeksList"),newWeekStart=$("newWeekStart"),newWeekEnd=$("newWeekEnd"),newWeekLabel=$("newWeekLabel"),newWeekTemplate=$("newWeekTemplate"),publisherList=$("publisherList"),pubSearch=$("pubSearch"),pubFilter=$("pubFilter"),eligibilityGrid=$("eligibilityGrid"),pubNameInput=$("pubName"),pubGender=$("pubGender"),pubActive=$("pubActive"),addPublisherBtn=$("addPublisherBtn"),cancelEditBtn=$("cancelEditBtn"),profileTitle=$("profileTitle"),profileBody=$("profileBody"),profileModal=$("profileModal"),templateName=$("templateName"),templateDesc=$("templateDesc"),templateList=$("templateList"),templateModalBody=$("templateModalBody"),templateModal=$("templateModal"),previewFrame=$("previewFrame"),previewWrap=$("previewWrap"),installBtn=$("installBtn");
 document.querySelectorAll(".tabbtn").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
@@ -1467,13 +1572,13 @@ document.addEventListener("change",e=>{
    const newLabel=staticAssignmentLabel(s);
    if(next&&next!==previous&&!confirmAdditionalAssignment(next,newLabel)){s.value=previous;return}
    if(next&&next!==previous&&!confirmRecentUsage(next,role,newLabel)){s.value=previous;return}
-   if(next&&next!==previous&&!confirmRecentUsageGeneral(next,role,newLabel)){s.value=previous;return}
    collectFormToWeek();renderConflicts()
  }
 });
 auxEnabled.onchange=()=>{currentWeek().auxEnabled=auxEnabled.checked;saveState();renderSchedule()};
 addMinistryBtn.onclick=()=>{currentWeek().ministry.push({id:uid("m"),title:"[Title]",time:"5 min.",type:"demonstration",main:{student:"",assistant:"",filter:"all"},aux:{student:"",assistant:"",filter:"all"}});saveState();renderSchedule()};
 addLivingBtn.onclick=()=>{currentWeek().living.push({id:uid("l"),title:"[Title]",time:"10 min.",person:""});saveState();renderSchedule()};
+$("rotationBtn").onclick=openRotation;$("rotationCloseBtn").onclick=()=>$("rotationModal").classList.add("hidden");$("rotationRefreshBtn").onclick=recalculateRotation;$("rotationAllowRecent").onchange=recalculateRotation;$("rotationConfirmedTypes").onchange=()=>$("rotationApplyBtn").disabled=!rotationPlan?.suggestions.length||!$("rotationConfirmedTypes").checked;$("rotationPublisher").onchange=refreshRotationOptions;$("rotationApplyBtn").onclick=applyRotation;
 saveBtn.onclick=()=>{collectFormToWeek();alert("Saved on this device.")};pdfBtn.onclick=()=>{collectFormToWeek();downloadPdfForWeek(currentWeek())};previewBtn.onclick=previewPdf;previewDownloadBtn.onclick=()=>downloadPdfForWeek(currentWeek());closePreviewBtn.onclick=closePreview;printBtn.onclick=printCurrent;finalizeBtn.onclick=finalizeWeek;clearBtn.onclick=clearCurrentAssignments;
 createWeekBtn.onclick=createWeek;fetchJwBtn.onclick=()=>importJw("new");refreshJwBtn.onclick=()=>importJw("current");weekPdfInput.onchange=e=>{const f=e.target.files[0];if(f)importPdf(f,"new");e.target.value=""};currentPdfInput.onchange=e=>{const f=e.target.files[0];if(f)importPdf(f,"current");e.target.value=""};
 closeImportBtn.onclick=()=>importModal.classList.add("hidden");cancelImportBtn.onclick=()=>importModal.classList.add("hidden");confirmImportBtn.onclick=createWeekFromPendingImport;applyImportCurrentBtn.onclick=applyPendingToCurrent;
