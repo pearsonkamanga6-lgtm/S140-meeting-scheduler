@@ -22,7 +22,7 @@ const result=await run(`(async()=>{
  w.ministry[0].title="Example ministry";w.ministry[0].main.student=a.id;w.ministry[0].main.assistant=b.id;
  w.living[0].title="Example living";w.living[0].person=c.id;
  future.fields.p1person=a.id;
- renderEverything();check("page initialized",document.querySelector("h1").textContent.includes("v6.0"));
+ renderEverything();check("page initialized",document.querySelector("h1").textContent.trim()==="S-140");
  check("static selection retained",chairman.value===b.id);
  state.currentWeekId=prev.id;renderSchedule();check("switching weeks does not inherit old selection",chairman.value==="");
  state.currentWeekId=w.id;renderEverything();
@@ -196,11 +196,22 @@ const result=await run(`(async()=>{
  check("manual difficulty override used",rotationSlots(profileWeek).find(x=>x.role==="treasuresTalk").difficulty===2);
  check("private profile notes not included in schedule PDF",!(await buildPdfBlob(profileWeek).text()).includes("Private test notes"));
  check("profile and family persisted in local backup state",JSON.parse(localStorage.getItem(STORAGE_KEY)).publishers.find(x=>x.id===familyBrother.id).familyIds.includes(familySister.id));
+ switchTab("homeTab");
+ check("home opens without release announcements",!$("homeTab").classList.contains("hidden")&&!document.querySelector("#versionBanner")&&document.querySelector("h1").textContent==="S-140");
+ check("only four quick actions shown",document.querySelectorAll(".quick-card").length===4);
+ $("homeGenerate").click();check("home auto schedule opens online workflow",!$("onlineScheduleModal").classList.contains("hidden"));$("onlineScheduleClose").click();
+ $("homeAI").click();check("home AI opens profile chat",!$("profileChatModal").classList.contains("hidden"));$("profileChatClose").click();
+ $("homeSchedule").click();check("current schedule opens",!$("scheduleTab").classList.contains("hidden")&&$("homeTab").classList.contains("hidden"));
+ check("secondary actions collapsed by default",!$("clearBtn").closest("details").open);
+ $("brandHome").click();$("homePublishers").click();check("publisher page opens with editor collapsed",!$("publisherTab").classList.contains("hidden")&&!$("publisherFormDetails").open);
+ editPublisher(state.publishers[0].id);check("publisher editing opens form",$("publisherFormDetails").open);
+ $("brandHome").click();$("homeWeeks").click();check("saved weeks opens",!$("weeksTab").classList.contains("hidden"));
+ $("brandHome").click();
  return results;
 })()`);
 for(const t of result)console.log('PASS',t);
 assert.equal(errors.length,0,JSON.stringify(errors));
-const health=await (await fetch(origin+'/api/health')).json();assert.equal(health.version,'6.0.0');
+const health=await (await fetch(origin+'/api/health')).json();assert.equal(health.version,'6.1.0');
 for(const p of ['/server.js','/.git/config','/%2e%2e%2fetc/passwd'])assert.equal((await fetch(origin+p)).status,403);
 console.log('PASS HTTP health and static file protection');console.log(result.length+1,'checks passed');
 }finally{ws.close()}

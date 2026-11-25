@@ -1,7 +1,7 @@
 {
   "name": "S-140 Meeting Scheduler",
   "short_name": "S-140",
-  "description": "Ndandanda ya msonkhano - Cinyanja v6.0 - Local AI profile assistant and family pairing",
+  "description": "Ndandanda ya msonkhano - Cinyanja v6.1 - Simplified dashboard and navigation",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#087f8c",

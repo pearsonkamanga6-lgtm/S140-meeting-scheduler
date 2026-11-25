@@ -1,8 +1,8 @@
 {
   "name": "s140-meeting-scheduler",
-  "version": "6.0.0",
+  "version": "6.1.0",
   "private": true,
-  "description": "S-140 Meeting Scheduler v6.0 - Local AI profile assistant and family pairing",
+  "description": "S-140 Meeting Scheduler v6.1 - Simplified dashboard and navigation",
   "scripts": {
     "start": "node server.js"
   },

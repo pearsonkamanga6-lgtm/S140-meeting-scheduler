@@ -54,48 +54,79 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
 .install-note{background:#eaf5f7;border:1px solid #b7dade;color:#275d65;border-radius:10px;padding:9px 10px}
 @media(max-width:900px){.grid3,.grid4,.statgrid{grid-template-columns:1fr 1fr}.topbar{position:static;align-items:flex-start;flex-direction:column}.tabs{width:100%}.tabbtn{flex:1}}
 @media(max-width:650px){.grid2,.grid3,.grid4,.statgrid{grid-template-columns:1fr}.parthead{align-items:flex-start;flex-direction:column}.publisher-item,.week-item,.template-item{grid-template-columns:1fr}.weekbar select{width:100%}}
+
+/* Minimal application shell; detailed tools stay within their screens. */
+:root{--bg:#f5f7f8;--card:#fff;--text:#223139;--muted:#647580;--line:#e0e6e9;--teal:#087f83;--navy:#16464b;--shadow:0 3px 12px rgba(25,45,55,.04);--radius:16px}
+body{font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;line-height:1.45}
+.app{max-width:1060px;padding:24px 24px 48px}
+.topbar{position:relative;top:0;box-shadow:none;border:0;background:transparent;padding:0 0 18px;gap:20px;border-radius:0;border-bottom:1px solid var(--line);margin-bottom:25px}
+.brand-home{display:flex;align-items:center;gap:10px;border:0;background:transparent;padding:0;text-align:left;flex-shrink:0;font-weight:600}
+.brand-symbol{display:grid;place-items:center;width:44px;height:44px;border-radius:13px;background:var(--navy);color:#fff;font-size:1.55rem;font-weight:750}
+.brand h1{font-size:1.25rem;line-height:1.15;letter-spacing:-.04em}.brand small{display:block;font-size:.74rem;font-weight:500}
+.tabs{gap:5px;margin-left:auto;align-items:center}.tabbtn{padding:9px 13px;border:0;background:transparent;font-weight:600;color:var(--muted);font-size:.91rem}.tabbtn.active{background:#e1eff0;color:#075c61}
+.more-nav{position:relative;flex-shrink:0}.more-nav summary{list-style:none;cursor:pointer;border:1px solid var(--line);border-radius:10px;padding:7px 12px;font-weight:800;letter-spacing:2px;background:white}.more-nav summary::-webkit-details-marker{display:none}.more-menu{position:absolute;right:0;top:42px;z-index:60;min-width:180px;background:white;border:1px solid var(--line);border-radius:12px;padding:6px;box-shadow:0 8px 25px #152c3320;display:grid;gap:4px}.more-menu button{text-align:left}
+.home-hero{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:32px 36px;background:#16464b;border-radius:22px;color:#fff;overflow:hidden;min-height:225px}
+.hero-copy{flex:1}.eyebrow{color:#b9dad8;font-size:.69rem;font-weight:650;letter-spacing:.12em}.home-hero h2{font-size:clamp(1.65rem,4vw,2.5rem);line-height:1.13;letter-spacing:-.045em;margin:10px 0 5px}.home-hero p{color:#d0e5e3;font-size:.95rem;margin:0 0 22px}.hero-button{background:#fff;color:#16464b;border:0;padding:12px 18px;display:flex;align-items:center;gap:12px;min-width:190px;justify-content:space-between;border-radius:11px}.hero-art{width:180px;flex-shrink:0}.hero-art svg{width:100%;height:auto}
+.home-heading,.page-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:25px 0 12px}.home-heading h2,.page-heading h2{font-size:1.15rem;letter-spacing:-.025em;margin:0}.page-heading h2{font-size:1.55rem}
+.quick-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.quick-card{display:flex;align-items:center;gap:13px;min-height:84px;background:white;border:1px solid var(--line);box-shadow:none;text-align:left;border-radius:15px;padding:16px}.quick-card>span:nth-child(2){flex:1;min-width:0}.quick-card strong,.upcoming-row strong{display:block;font-size:1rem;font-weight:650}.quick-card small,.upcoming-row small{display:block;color:var(--muted);font-weight:400;font-size:.79rem;margin-top:3px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.quick-icon{width:42px;height:42px;display:grid;place-items:center;flex-shrink:0;border-radius:12px;background:#e9f3f2;color:#1c6a68}.quick-icon svg{width:22px;height:22px;stroke:currentColor;stroke-width:1.65;stroke-linecap:round;stroke-linejoin:round;fill:none}.ai-icon{background:#eeeaf8;color:#6b539b}.arrow{font-size:1.35rem;color:var(--muted);font-weight:400}.hero-button .arrow{color:#16464b}
+.text-button{border:0;background:transparent;color:#087278;font-size:.86rem;font-weight:600;padding:5px}.upcoming-list{padding:0;margin:0;overflow:hidden}.upcoming-row{display:flex;align-items:center;gap:12px;width:100%;border:0;border-bottom:1px solid var(--line);border-radius:0;padding:15px 18px;text-align:left}.upcoming-row:last-child{border-bottom:0}.upcoming-row>span:nth-child(2){flex:1;min-width:0}.calendar-dot{display:grid;place-items:center;background:#f0f3f4;color:#5e747c;width:36px;height:36px;border-radius:10px;flex-shrink:0}.home-empty{padding:24px;color:var(--muted);font-size:.9rem;text-align:center}
+.card,.part{box-shadow:none;border-color:var(--line)}.card{padding:18px}.part{padding:14px}.section-title{font-size:1.02rem;border-bottom:1px solid var(--line)}.parthead h3{font-size:1rem}.hall{border-style:solid;background:#f9fafb}.toolbar{margin-top:10px;gap:8px}.schedule-primary{margin-top:16px}button,.filelabel{font-weight:600}.disclosure{margin-top:12px}.disclosure>summary{cursor:pointer;color:#3c5862;font-weight:600;font-size:.9rem;padding:8px 0}.disclosure[open]>summary{margin-bottom:8px}.modal-card{padding:22px}.modal-head h2{font-size:1.2rem}.modal-card>p{font-size:.9rem;color:var(--muted)}.modal-card h3{font-size:1.05rem}.modal-card .card{background:#fafbfc}.pill{font-weight:500}.publisher-item>div{min-width:0}.page-heading+.card{margin-top:0}.weekbar label{margin:0}.notice{font-size:.84rem}.tab{min-width:0}.parthead input{max-width:100%}
+@media(max-width:900px){.topbar{flex-direction:row;align-items:center;flex-wrap:wrap;gap:12px}.tabs{width:auto;order:3;flex:1 0 100%;margin:0;display:grid;grid-template-columns:repeat(4,1fr)}.more-nav{margin-left:auto}.tabbtn{font-size:.85rem}.hero-art{width:140px}}
+@media(max-width:650px){.tabs{grid-template-columns:repeat(4,minmax(0,1fr));gap:2px}.tabs .tabbtn{padding:9px 4px;min-width:0;font-size:.79rem}.app{padding:14px 14px 30px}.topbar{margin-bottom:16px;padding-bottom:10px}.brand-symbol{width:38px;height:38px}.home-hero{padding:23px 19px;min-height:0;border-radius:17px;gap:6px}.hero-art{width:clamp(54px,23vw,90px)}.home-hero h2{font-size:1.55rem}.home-hero p{font-size:.8rem;margin-bottom:15px}.hero-button{min-width:0;padding:10px 12px;font-size:.88rem;gap:9px}.quick-grid{gap:9px}.quick-card{padding:12px;gap:8px;min-height:95px;align-items:flex-start;flex-direction:column}.quick-card .arrow{display:none}.quick-icon{width:34px;height:34px;border-radius:9px}.quick-icon svg{width:19px;height:19px}.quick-card strong{font-size:.88rem}.quick-card small{font-size:.72rem;max-width:100%}.quick-card>span:nth-child(2){width:100%}.home-heading{margin-top:19px}.home-heading h2{font-size:1rem}.modal{padding:8px}.modal-card{padding:14px;width:100%;max-height:94vh}.modal-head h2{font-size:1.05rem}.modal-card .toolbar button{font-size:.82rem}.page-heading h2{font-size:1.25rem}.schedule-primary button{flex:1 0 40%;font-size:.85rem}.card{padding:13px}.upcoming-list{padding:0}.weekbar select{width:100%}.section-actions{align-items:flex-start}.section-title{font-size:.92rem}.parthead h3{width:100%}.history-row{grid-template-columns:1fr;gap:3px}}
+@media(max-width:360px){.home-hero{padding:18px 15px}.home-hero h2{font-size:1.3rem}.hero-button{font-size:.78rem;gap:6px}.quick-card strong{font-size:.8rem}.quick-card{padding:10px}.brand small{font-size:.68rem}}
+@media(prefers-reduced-motion:no-preference){.quick-card:hover{border-color:#9cbebd;transform:translateY(-1px);transition:.15s ease}}
+:focus-visible{outline:3px solid #75b3b2;outline-offset:3px}
 </style>
 </head>
 <body>
 <div class="app">
- <div class="topbar">
-  <div class="brand"><h1>S-140 Meeting Scheduler <span style="font-size:.72rem;background:#173f49;color:#fff;padding:3px 7px;border-radius:999px;vertical-align:middle">v6.0</span></h1><small>Ndandanda ya msonkhano • Cinyanja</small></div>
-  <div class="tabs">
-   <button class="tabbtn active" data-tab="scheduleTab">Schedule</button>
+ <header class="topbar">
+  <button class="brand brand-home" id="brandHome" aria-label="S-140 home"><span class="brand-symbol">S</span><span><h1>S-140</h1><small>Meeting Scheduler</small></span></button>
+  <nav class="tabs" aria-label="Main navigation">
+   <button class="tabbtn active" data-tab="homeTab">Home</button>
+   <button class="tabbtn" data-tab="scheduleTab">Schedule</button>
    <button class="tabbtn" data-tab="weeksTab">Weeks</button>
    <button class="tabbtn" data-tab="publisherTab">Publishers</button>
-   <button class="tabbtn" data-tab="templatesTab">Templates</button>
-   <button class="tabbtn" data-tab="backupTab">Backup</button>
-   <button id="installBtn" class="hidden">Install App</button>
+  </nav>
+  <details class="more-nav" id="moreNav"><summary aria-label="More options">•••</summary><div class="more-menu"><button class="tabbtn" data-tab="templatesTab">Templates</button><button class="tabbtn" data-tab="backupTab">Settings &amp; backup</button><button id="installBtn" class="hidden">Install app</button></div></details>
+ </header>
+ <section id="homeTab" class="tab">
+  <div class="home-hero">
+   <div class="hero-copy"><div class="eyebrow">MIDWEEK MEETING</div><h2>Plan the next meeting.</h2><p>Ndandanda ya msonkhano</p>
+    <button class="primary hero-button" id="homeGenerate"><span aria-hidden="true">✦</span> Auto schedule <span class="arrow" aria-hidden="true">→</span></button>
+   </div>
+   <div class="hero-art" aria-hidden="true"><svg viewBox="0 0 200 160" fill="none"><rect x="33" y="19" width="134" height="123" rx="15" fill="#fff" fill-opacity=".13" stroke="#fff" stroke-opacity=".55"/><path d="M33 53h134M65 12v26M136 12v26" stroke="#fff" stroke-width="5" stroke-linecap="round"/><rect x="52" y="69" width="25" height="23" rx="5" fill="#fff" fill-opacity=".23"/><rect x="88" y="69" width="25" height="23" rx="5" fill="#fff" fill-opacity=".23"/><rect x="124" y="69" width="25" height="23" rx="5" fill="#fff" fill-opacity=".23"/><rect x="52" y="104" width="25" height="23" rx="5" fill="#fff" fill-opacity=".23"/><rect x="88" y="104" width="25" height="23" rx="5" fill="#fff" fill-opacity=".23"/><circle cx="140" cy="116" r="24" fill="#b4e2cd"/><path d="m129 116 8 8 15-17" stroke="#18483d" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
   </div>
- </div>
-
- <section id="scheduleTab" class="tab">
-  <div id="versionBanner" class="notice ok" style="margin-top:14px"><strong>Running version:</strong> v6.0. Published-week discovery and automatic scheduling.</div><div id="standaloneBanner" class="notice warn hidden" style="margin-top:14px"><strong>Standalone mode:</strong> PDF import works, but JW.org automatic fetch needs online mode. Extract the application ZIP and double-click <strong>START_S140_ONLINE.bat</strong>.</div>
+  <div class="home-heading"><h2>Quick actions</h2></div>
+  <div class="quick-grid">
+   <button id="homeSchedule" class="quick-card"><span class="quick-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M7 3v4M17 3v4M3 10h18M8 14h3M14 14h3"/></svg></span><span><strong>Current schedule</strong><small id="homeCurrentLabel">Open week</small></span><span class="arrow">›</span></button>
+   <button id="homeWeeks" class="quick-card"><span class="quick-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="17" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/></svg></span><span><strong>Saved weeks</strong><small id="homeWeekCount">0 weeks</small></span><span class="arrow">›</span></button>
+   <button id="homePublishers" class="quick-card"><span class="quick-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20v-3a6 6 0 0 1 12 0v3M17 5a3 3 0 0 1 0 6M18 14a5 5 0 0 1 3 5"/></svg></span><span><strong>Publishers</strong><small id="homePublisherCount">0 active</small></span><span class="arrow">›</span></button>
+   <button id="homeAI" class="quick-card"><span class="quick-icon ai-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2l2.8 7.2L22 12l-7.2 2.8L12 22l-2.8-7.2L2 12l7.2-2.8L12 2Z"/></svg></span><span><strong>AI assistant</strong><small>Publisher abilities</small></span><span class="arrow">›</span></button>
+  </div>
+  <div class="home-heading"><h2>Upcoming weeks</h2><button id="homeViewAll" class="text-button">View all →</button></div>
+  <div id="homeUpcoming" class="card upcoming-list"></div>
+ </section>
+ <section id="scheduleTab" class="tab hidden">
+  <div class="page-heading"><h2>Schedule</h2><button class="primary" id="onlineScheduleBtn">✦ Auto schedule</button></div>
+  <div id="standaloneBanner" class="notice warn hidden">Offline file: use the hosted app for online import.</div>
   <div class="card">
    <div class="weekbar">
-    <strong>Week:</strong>
-    <select id="weekSelector"></select>
-    <button id="newWeekGoBtn">+ New Week</button>
-    <button id="duplicateWeekBtn">Duplicate Week</button>
-    <button id="loadTemplateBtn">Load Template</button>
-    <button id="archiveWeekBtn" class="warningbtn">Archive</button>
-    <span class="spacer"></span>
-    <span id="weekStatus"></span>
+    <label for="weekSelector">Week</label><select id="weekSelector"></select>
+    <span class="spacer"></span><span id="weekStatus"></span>
    </div>
+   <div class="toolbar schedule-primary">
+    <button class="primary" id="autoScheduleBtn">Auto assign</button>
+    <button id="previewBtn">Preview PDF</button>
+    <button class="pdfbtn" id="pdfBtn">Download PDF</button>
+    <button id="saveBtn">Save</button>
+   </div>
+   <details class="disclosure"><summary>More actions</summary><div class="toolbar">
+    <button id="newWeekGoBtn">New week</button><button id="duplicateWeekBtn">Duplicate</button><button id="loadTemplateBtn">Template</button><button id="rotationBtn">Suggestions</button><button id="printBtn">Print</button><button id="finalizeBtn">Finalize week</button><button id="refreshJwBtn">Refresh JW.org</button>
+    <label class="filelabel">Import PDF<input id="currentPdfInput" type="file" accept="application/pdf" style="display:none"></label>
+    <button id="archiveWeekBtn" class="warningbtn">Archive</button><button class="danger" id="clearBtn">Clear assignments</button>
+   </div></details>
   </div>
-
-  <div class="toolbar">
-   <button class="primary" id="saveBtn">Save</button><button class="primary" id="onlineScheduleBtn">⚡ Fetch & Schedule All Online Weeks</button><button class="primary" id="autoScheduleBtn">Generate Current Week</button><button id="rotationBtn">Review Assignment Suggestions</button>
-   <button class="pdfbtn" id="pdfBtn">Download PDF</button>
-   <button id="previewBtn">PDF Preview</button>
-   <button id="printBtn">Print</button>
-   <button id="finalizeBtn">Finalize & Record History</button>
-   <button id="refreshJwBtn">Refresh Parts from JW.org</button>
-   <label class="filelabel">Import PDF to Current Week<input id="currentPdfInput" type="file" accept="application/pdf" style="display:none"></label>
-   <button class="danger" id="clearBtn">Clear Assignments</button>
-  </div>
-
   <div class="card">
    <div class="grid4">
     <div><label>Sabata / Week label</label><input id="weekLabel" placeholder="September 7–13, 2026"></div>
@@ -115,7 +146,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
     <div class="field"><label>Mau Oyamba</label><input id="openingComments" value="1 min."><div class="smalltext muted">Cheyamani’s name appears automatically.</div></div>
    </div>
    <div id="autoScheduleSummary" class="notice hidden" role="status"></div><div id="conflictBox"></div>
-   <div class="notice ok"><strong>Assignment rotation:</strong> All roles count toward the two-week rest preference, including publisher and householder roles. Existing assignments are never overwritten by Auto Assign.</div>
+
   </div>
 
   <div class="section treasures">
@@ -165,9 +196,9 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
   </div>
  </section>
 
- <section id="weeksTab" class="tab hidden">
+ <section id="weeksTab" class="tab hidden"><div class="page-heading"><h2>Saved weeks</h2><button class="primary" id="weeksQuickGenerate">✦ Auto schedule</button></div>
   <div class="card">
-   <h2 style="margin-top:0">Create a New Week</h2>
+   <details id="createWeekDetails" class="disclosure"><summary>Create a week</summary>
    <div class="grid4">
     <div><label>Start date</label><input id="newWeekStart" type="date"></div>
     <div><label>End date</label><input id="newWeekEnd" type="date"></div>
@@ -179,7 +210,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
     <button class="pdfbtn" id="fetchJwBtn">Fetch from JW.org</button><button class="primary" id="onlineScheduleWeeksBtn">Fetch & Schedule All Online Weeks</button>
     <label class="filelabel">Upload Workbook PDF<input id="weekPdfInput" type="file" accept="application/pdf" style="display:none"></label>
    </div>
-   <div id="onlineImportStatus" class="notice ok"><strong>Automatic import:</strong> choose the week start date, then fetch the official Cinyanja schedule from JW.org or upload the official meeting-workbook PDF.</div>
+   <div id="onlineImportStatus" class="notice ok">Choose a date to import one week.</div></details>
   </div>
   <div class="card">
    <div class="grid3">
@@ -193,14 +224,14 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
 
  <section id="publisherTab" class="tab hidden">
   <div class="card">
-   <h2 style="margin-top:0">Publishers</h2><div class="toolbar"><button class="primary" id="profileChatBtn">AI Publisher Profile Chat</button></div>
+   <div class="page-heading"><h2>Publishers</h2><button class="primary" id="profileChatBtn">✦ AI assistant</button></div><details id="publisherFormDetails" class="disclosure"><summary>Add or edit publisher</summary>
    <div class="grid3">
     <div><label>Full name</label><input id="pubName"></div>
     <div><label>Brother / Sister</label><select id="pubGender"><option value="brother">Brother</option><option value="sister">Sister</option></select></div>
     <div><label>Status</label><select id="pubActive"><option value="true">Active</option><option value="false">Inactive</option></select></div>
    </div>
    <div class="field"><label>Eligible assignments</label><div class="grid3" id="eligibilityGrid"></div></div>
-   <div class="toolbar"><button class="primary" id="addPublisherBtn">Add Publisher</button><button id="cancelEditBtn" class="hidden">Cancel Edit</button></div>
+   <div class="toolbar"><button class="primary" id="addPublisherBtn">Add Publisher</button><button id="cancelEditBtn" class="hidden">Cancel Edit</button></div></details>
   </div>
   <div class="card">
    <div class="grid2"><div><label>Search</label><input id="pubSearch" placeholder="Search publisher"></div><div><label>Filter</label><select id="pubFilter"><option value="all">All</option><option value="brother">Brothers</option><option value="sister">Sisters</option><option value="inactive">Inactive</option></select></div></div>
@@ -221,7 +252,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
  <section id="backupTab" class="tab hidden">
   <div class="card">
    <h2 style="margin-top:0">Backup & Restore</h2>
-   <p class="muted">Backups include all weeks, archived schedules, publishers, ability notes and family links, availability, templates and assignment history. Keep backups private. Old v2.x backups are automatically migrated.</p>
+   <p class="muted">Keep backups private. They include publisher notes and schedules.</p>
    <div class="toolbar">
     <button class="primary" id="exportBtn">Export Backup</button><button id="restoreCheckpointBtn">Undo Last Import / Restore</button>
     <label class="filelabel">Import Backup<input id="importFile" type="file" accept="application/json" style="display:none"></label>
@@ -230,11 +261,11 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
   <div class="card">
    <h2 style="margin-top:0">Online Import & Install</h2>
    <div id="serverStatus" class="install-note">Checking the online JW.org importer…</div>
-   <div id="installHelp" class="install-note" style="margin-top:10px">When this package is served from HTTPS or localhost, supported browsers can install it to the home screen and use it offline. The JW.org importer uses the included same-origin server endpoint so the browser does not have to scrape JW.org directly.</div>
+   <div id="installHelp" class="install-note" style="margin-top:10px">Install on supported browsers for offline access.</div>
   </div>
  </section>
 
- <div class="footer-note">S-140 Meeting Scheduler v5.1 • Wotsogoza wording corrected</div>
+
 </div>
 
 <div id="profileModal" class="modal hidden"><div class="modal-card">
@@ -264,7 +295,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
 
 <div id="profileChatModal" class="modal hidden"><div class="modal-card">
  <div class="modal-head"><h2>AI Publisher Profile Chat</h2><button id="profileChatClose">Close</button></div>
- <p>Describe observed assignment abilities and recommendations with permission. Notes are stored on this device and included in backups. Do not enter confidential personal details. Approved eligibility is still required.</p>
+ <p>Describe confirmed assignment abilities. Notes stay on this device and in backups. Avoid confidential details.</p>
  <label>Publisher</label><select id="chatPublisher"></select>
  <div id="profileChatMessages" role="log" aria-live="polite"></div>
  <label>Describe ability, experience and preferences (English)</label><textarea id="chatDescription" rows="5" maxlength="4000" placeholder="Experienced in public speaking, patient with learners, confident explaining beliefs. Prefer difficult talks. Can be used frequently if necessary."></textarea>
@@ -274,24 +305,24 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
  <div class="grid2"><div><label>Assignment experience</label><select id="chatLevel"><option value="unknown">Not assessed</option><option value="developing">Developing / simple parts</option><option value="standard">Standard assignments</option><option value="advanced">Experienced / demanding parts</option></select></div>
  <div><label>Frequency recommendation</label><select id="chatFrequency"><option value="normal">Normal two-week rest preference</option><option value="frequent">Can be considered more frequently (with exception enabled)</option></select></div></div>
  <label>Confirmed assignment strengths</label><div id="chatStrengths" class="grid3"></div>
- <p class="smalltext muted">The confirmed level limits automatic assignments to that difficulty or below. Age, title, pioneer status or years of service alone do not establish assignment ability. Review the suggestions; no qualification boxes are automatically changed.</p>
- <label>Confirmed family members (eligible mixed-gender pairing)</label><div id="chatFamily"></div>
+ <p class="smalltext muted">Confirm actual abilities, not assumptions. Approved eligibility remains unchanged.</p>
+ <details class="disclosure"><summary>Family pairing</summary><div id="chatFamily"></div></details>
  <div class="toolbar"><button class="primary" id="chatSave">Save confirmed profile</button><button id="chatClear">Clear ability notes</button></div></div>
- <div class="card"><h3>Review difficulty for the open week</h3><p class="smalltext muted">Difficulty suggestions are estimates from role, title, scenario and duration. Override them when needed.</p><label>Assignment</label><select id="chatPart"></select><label>Difficulty</label><select id="chatDifficulty"><option value="">Automatic estimate</option><option value="1">Simple</option><option value="2">Standard</option><option value="3">Demanding</option></select><button id="chatSaveDifficulty">Save difficulty override</button><div id="chatPartReason" class="smalltext muted"></div></div>
+ <details class="card disclosure"><summary>Assignment difficulty</summary><p class="smalltext muted">Review or override the estimate.</p><label>Assignment</label><select id="chatPart"></select><label>Difficulty</label><select id="chatDifficulty"><option value="">Automatic estimate</option><option value="1">Simple</option><option value="2">Standard</option><option value="3">Demanding</option></select><button id="chatSaveDifficulty">Save difficulty override</button><div id="chatPartReason" class="smalltext muted"></div></details>
  </div></div>
 <div id="onlineScheduleModal" class="modal hidden"><div class="modal-card">
  <div class="modal-head"><h2>Fetch &amp; Schedule All Published Weeks</h2><button id="onlineScheduleClose" class="closebtn">Close</button></div>
- <p>Discover all published upcoming Cinyanja meeting programmes on official JW.org, then allocate eligible publishers in chronological order. Existing assignments and finalized/archived weeks are protected. Only vacant roles are filled.</p>
+ <p>Import published weeks from JW.org. Existing assignments are kept.</p>
  <div class="grid2"><div><label>From week (default: current week)</label><input type="date" id="onlineScheduleFrom"></div><div><label>Auxiliary classroom for new weeks</label><select id="onlineScheduleAux"><option value="yes">Enabled</option><option value="no">Disabled</option></select></div></div>
  <label class="switchrow"><input type="checkbox" id="onlineScheduleRecent">When necessary, allow recent-use exceptions (last/next two weeks)</label>
- <label class="switchrow"><input type="checkbox" id="onlineScheduleVerified">I have checked the publisher eligibility register and will review the imported meeting parts and generated drafts before finalizing.</label>
- <div class="toolbar"><button class="primary" id="onlineScheduleRun" disabled>Discover, Import &amp; Generate Drafts</button><button id="onlineScheduleApply" class="primary" disabled>Save All Generated Weeks</button></div>
- <div class="toolbar hidden" id="onlineSchedulePdfTools"><button class="pdfbtn" id="onlinePreviewAll">Preview All Suggested PDFs</button><button class="pdfbtn" id="onlineDownloadAll">Download All Suggested Weeks (PDF)</button></div>
+ <label class="switchrow"><input type="checkbox" id="onlineScheduleVerified">I have checked eligibility and will review the drafts.</label>
+ <div class="toolbar"><button class="primary" id="onlineScheduleRun" disabled>Generate schedules</button><button id="onlineScheduleApply" class="primary" disabled>Save schedules</button></div>
+ <div class="toolbar hidden" id="onlineSchedulePdfTools"><button class="pdfbtn" id="onlinePreviewAll">Preview all</button><button class="pdfbtn" id="onlineDownloadAll">Download all PDFs</button></div>
  <div id="onlineScheduleStatus" class="notice ok" role="status">Ready to search the official catalogue.</div><div id="onlineScheduleResults"></div>
  </div></div>
 <div id="autoScheduleModal" class="modal hidden"><div class="modal-card">
  <div class="modal-head"><h2>Generate Automatic Schedule</h2><button id="autoScheduleClose" class="closebtn">Close</button></div>
- <p>Fill the current week's vacant roles using registered, active, available publishers with approved eligibility. Existing assignments stay unchanged. The schedule is saved as a draft, not finalized.</p>
+ <p>Fill vacant roles. Keep existing names. Save as draft.</p>
  <div id="autoSchedulePool" class="notice ok"></div>
  <label class="switchrow"><input id="autoScheduleRecent" type="checkbox">If necessary, consider publishers used in the last two weeks or assigned in the next two weeks</label>
  <label class="switchrow"><input id="autoScheduleVerified" type="checkbox">I have checked the workbook part types and publisher eligibility.</label>
@@ -455,7 +486,16 @@ function eligiblePublishers(role,filter="all",selected="",historyRole=null,partn
 function firstLivingNumber(w=currentWeek()){return 4+w.ministry.length}
 function cbsNo(w=currentWeek()){return firstLivingNumber(w)+w.living.length}
 function roleNumberFromLivingIndex(i,w=currentWeek()){return firstLivingNumber(w)+i}
-function switchTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.add("hidden"));$(id).classList.remove("hidden");document.querySelectorAll(".tabbtn").forEach(b=>b.classList.toggle("active",b.dataset.tab===id));if(id==="weeksTab")renderWeeks();if(id==="publisherTab")renderPublishers();if(id==="templatesTab")renderTemplates()}
+function renderHome(){
+ const today=mondayOf([new Date().getFullYear(),String(new Date().getMonth()+1).padStart(2,"0"),String(new Date().getDate()).padStart(2,"0")].join("-"));
+ const w=currentWeek(),weeks=state.weeks.filter(x=>!x.archived),up=weeks.filter(x=>x.startDate&&x.startDate>=today).sort((a,b)=>a.startDate.localeCompare(b.startDate)).slice(0,3);
+ $("homeCurrentLabel").textContent=w?.startDate?(w.label||w.startDate):"Open week";
+ $("homeWeekCount").textContent=weeks.filter(x=>x.startDate).length+" saved";
+ $("homePublisherCount").textContent=state.publishers.filter(p=>p.active).length+" active";
+ $("homeUpcoming").innerHTML=up.length?up.map(x=>`<button class="upcoming-row" data-week="${esc(x.id)}"><span class="calendar-dot" aria-hidden="true">▦</span><span><strong>${esc(x.label||x.startDate)}</strong><small>${esc(x.bibleReading||"Meeting programme")}</small></span><span class="arrow">›</span></button>`).join(""):'<div class="home-empty">No upcoming schedules yet.</div>';
+ $("homeUpcoming").querySelectorAll("[data-week]").forEach(b=>b.onclick=()=>{collectFormToWeek();state.currentWeekId=b.dataset.week;saveState();renderSchedule();switchTab("scheduleTab")});
+}
+function switchTab(id){document.querySelectorAll(".tab").forEach(t=>t.classList.add("hidden"));$(id).classList.remove("hidden");document.querySelectorAll(".tabbtn").forEach(b=>b.classList.toggle("active",b.dataset.tab===id));if(id==="homeTab")renderHome();if(id==="weeksTab")renderWeeks();if(id==="publisherTab")renderPublishers();if(id==="templatesTab")renderTemplates();$("moreNav").open=false;window.scrollTo(0,0)}
 
 function renderWeekSelector(){
  const active=state.weeks.filter(w=>!w.archived).sort((a,b)=>(a.startDate||"").localeCompare(b.startDate||""));
@@ -660,11 +700,11 @@ function clearWeekAssignments(w){
 function renderEligibility(){eligibilityGrid.innerHTML=Object.entries(ROLE_LABELS).map(([k,v])=>`<label style="display:flex;align-items:center;gap:7px;border:1px solid #e2e7e9;border-radius:10px;padding:9px"><input class="elig" value="${k}" type="checkbox" style="width:auto">${v}</label>`).join("")}
 function renderPublishers(){
  const q=pubSearch.value.trim().toLowerCase(),f=pubFilter.value,w=currentWeek();let a=state.publishers.filter(p=>p.name.toLowerCase().includes(q));if(f==="brother"||f==="sister")a=a.filter(p=>p.gender===f&&p.active);if(f==="inactive")a=a.filter(p=>!p.active);a.sort((x,y)=>x.name.localeCompare(y.name));
- publisherList.innerHTML=a.length?a.map(p=>`<div class="publisher-item"><div><strong>${esc(p.name)}</strong><div><span class="pill ${p.gender}">${p.gender==="brother"?"Brother":"Sister"}</span><span class="pill">${p.active?"Active":"Inactive"}</span><span class="pill ${isAvailable(p,w)?"available":"unavailable"}">${isAvailable(p,w)?"Available this week":"Unavailable this week"}</span>${Object.keys(p.eligible||{}).filter(k=>p.eligible[k]).slice(0,5).map(k=>`<span class="pill">${esc(ROLE_LABELS[k])}</span>`).join("")}</div></div><div class="row-actions"><button class="small profile-pub" data-id="${p.id}">Profile</button><button class="small profile-chat" data-id="${esc(p.id)}">Ability Chat</button><button class="small edit-pub" data-id="${p.id}">Edit</button><button class="small danger delete-pub" data-id="${p.id}">Delete</button></div></div>`).join(""):'<div class="empty">No publishers found.</div>';
+ publisherList.innerHTML=a.length?a.map(p=>`<div class="publisher-item"><div><strong>${esc(p.name)}</strong><div><span class="pill ${p.gender}">${p.gender==="brother"?"Brother":"Sister"}</span><span class="pill">${p.active?"Active":"Inactive"}</span><span class="pill ${isAvailable(p,w)?"available":"unavailable"}">${isAvailable(p,w)?"Available this week":"Unavailable this week"}</span><span class="pill">${Object.values(p.eligible||{}).filter(Boolean).length} roles</span></div></div><div class="row-actions"><button class="small profile-pub" data-id="${p.id}">Profile</button><button class="small profile-chat" data-id="${esc(p.id)}">Ability Chat</button><button class="small edit-pub" data-id="${p.id}">Edit</button><button class="small danger delete-pub" data-id="${p.id}">Delete</button></div></div>`).join(""):'<div class="empty">No publishers found.</div>';
  publisherList.querySelectorAll(".profile-pub").forEach(b=>b.onclick=()=>openProfile(b.dataset.id));publisherList.querySelectorAll(".profile-chat").forEach(b=>b.onclick=()=>{openProfileChat();$("chatPublisher").value=b.dataset.id;loadChatPublisher()});publisherList.querySelectorAll(".edit-pub").forEach(b=>b.onclick=()=>editPublisher(b.dataset.id));publisherList.querySelectorAll(".delete-pub").forEach(b=>b.onclick=()=>deletePublisher(b.dataset.id))
 }
 function resetPublisherForm(){editingPublisherId=null;pubNameInput.value="";pubGender.value="brother";pubActive.value="true";document.querySelectorAll(".elig").forEach(c=>c.checked=false);addPublisherBtn.textContent="Add Publisher";cancelEditBtn.classList.add("hidden")}
-function editPublisher(id){const p=pubById(id);if(!p)return;editingPublisherId=id;pubNameInput.value=p.name;pubGender.value=p.gender;pubActive.value=String(p.active);document.querySelectorAll(".elig").forEach(c=>c.checked=!!p.eligible?.[c.value]);addPublisherBtn.textContent="Save Changes";cancelEditBtn.classList.remove("hidden");window.scrollTo({top:0,behavior:"smooth"})}
+function editPublisher(id){const p=pubById(id);if(!p)return;$("publisherFormDetails").open=true;editingPublisherId=id;pubNameInput.value=p.name;pubGender.value=p.gender;pubActive.value=String(p.active);document.querySelectorAll(".elig").forEach(c=>c.checked=!!p.eligible?.[c.value]);addPublisherBtn.textContent="Save Changes";cancelEditBtn.classList.remove("hidden");window.scrollTo({top:0,behavior:"smooth"})}
 function addPublisher(){const name=pubNameInput.value.trim();if(!name)return alert("Enter a name.");const eligible={};document.querySelectorAll(".elig").forEach(c=>eligible[c.value]=c.checked);const data={name,gender:pubGender.value,active:pubActive.value==="true",eligible};if(editingPublisherId)Object.assign(pubById(editingPublisherId),data);else state.publishers.push({id:uid("p"),...data,availability:[]});saveState();resetPublisherForm();renderPublishers();renderSchedule()}
 function deletePublisher(id){const p=pubById(id);if(p&&confirm(`Delete ${p.name}? Existing history will remain as a record but future dropdowns will no longer include this publisher.`)){state.publishers=state.publishers.filter(x=>x.id!==id);saveState();renderPublishers();renderSchedule()}}
 function profileStats(p){
@@ -1278,7 +1318,7 @@ function finalizeWeek(){
 }
 function clearCurrentAssignments(){if(!confirm("Clear all assigned names for this week? Titles, songs, dates and scriptures will remain."))return;clearWeekAssignments(currentWeek());saveState();renderSchedule()}
 
-function exportBackup(){collectFormToWeek();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="S140_Meeting_Scheduler_v6_0_Backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+function exportBackup(){collectFormToWeek();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="S140_Meeting_Scheduler_v6_1_Backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
 function saveCheckpoint(){
  try{localStorage.setItem(CHECKPOINT_KEY,JSON.stringify(state));return true}
  catch(e){alert("Could not create a recovery checkpoint. Export a backup before trying again.");return false}
@@ -2029,11 +2069,14 @@ function executeAutoSchedule(){
  panel.innerHTML="<strong>"+(remaining.length?"Automatic schedule needs review": "Automatic scheduling complete")+"</strong><br>"+esc(status)+(plan.timedOut?"<br>Search limit reached; this may not be the most complete schedule.":"")+(remaining.length?"<br><strong>Unfilled / unclassified:</strong><br>"+remaining.map(esc).join("<br>"):"")+(plan.suggestions.length?"<br>Saved as a draft. Use Backup to undo this update if needed.":"<br>No new names were assigned.");
  panel.classList.remove("hidden");
 }
-function renderEverything(){renderEligibility();renderTemplateSelectors();renderSchedule();renderWeeks();renderPublishers();renderTemplates()}
+function renderEverything(){renderEligibility();renderTemplateSelectors();renderSchedule();renderWeeks();renderPublishers();renderTemplates();renderHome()}
 const weekSelector=$("weekSelector"),weekStatus=$("weekStatus"),archiveWeekBtn=$("archiveWeekBtn"),weekLabel=$("weekLabel"),weekStart=$("weekStart"),weekEnd=$("weekEnd"),congregation=$("congregation"),bibleReading=$("bibleReading"),auxEnabled=$("auxEnabled"),auxCounselorWrap=$("auxCounselorWrap"),ministryParts=$("ministryParts"),livingParts=$("livingParts"),cbsNumber=$("cbsNumber"),conflictBox=$("conflictBox"),weekSearch=$("weekSearch"),weekFilter=$("weekFilter"),weekSort=$("weekSort"),weeksList=$("weeksList"),newWeekStart=$("newWeekStart"),newWeekEnd=$("newWeekEnd"),newWeekLabel=$("newWeekLabel"),newWeekTemplate=$("newWeekTemplate"),publisherList=$("publisherList"),pubSearch=$("pubSearch"),pubFilter=$("pubFilter"),eligibilityGrid=$("eligibilityGrid"),pubNameInput=$("pubName"),pubGender=$("pubGender"),pubActive=$("pubActive"),addPublisherBtn=$("addPublisherBtn"),cancelEditBtn=$("cancelEditBtn"),profileTitle=$("profileTitle"),profileBody=$("profileBody"),profileModal=$("profileModal"),templateName=$("templateName"),templateDesc=$("templateDesc"),templateList=$("templateList"),templateModalBody=$("templateModalBody"),templateModal=$("templateModal"),previewFrame=$("previewFrame"),previewWrap=$("previewWrap"),installBtn=$("installBtn");
 document.querySelectorAll(".tabbtn").forEach(b=>b.onclick=()=>switchTab(b.dataset.tab));
+$("brandHome").onclick=()=>switchTab("homeTab");
+$("homeGenerate").onclick=openOnlineSchedule;$("weeksQuickGenerate").onclick=openOnlineSchedule;
+$("homeSchedule").onclick=()=>switchTab("scheduleTab");$("homeWeeks").onclick=()=>switchTab("weeksTab");$("homeViewAll").onclick=()=>switchTab("weeksTab");$("homePublishers").onclick=()=>switchTab("publisherTab");$("homeAI").onclick=openProfileChat;
 weekSelector.onchange=()=>{collectFormToWeek();state.currentWeekId=weekSelector.value;saveState();renderSchedule()};
-newWeekGoBtn.onclick=()=>{switchTab("weeksTab");newWeekStart.focus()};duplicateWeekBtn.onclick=()=>duplicateWeek();loadTemplateBtn.onclick=openTemplateModal;archiveWeekBtn.onclick=()=>{const w=currentWeek();w.archived=!w.archived;saveState();renderSchedule();renderWeeks()};
+newWeekGoBtn.onclick=()=>{switchTab("weeksTab");$("createWeekDetails").open=true;newWeekStart.focus()};duplicateWeekBtn.onclick=()=>duplicateWeek();loadTemplateBtn.onclick=openTemplateModal;archiveWeekBtn.onclick=()=>{const w=currentWeek();w.archived=!w.archived;saveState();renderSchedule();renderWeeks()};
 weekStart.onchange=()=>{if(weekStart.value&&!weekEnd.value)weekEnd.value=plusDays(weekStart.value,6);if(weekStart.value&&weekEnd.value&&!weekLabel.value.trim())weekLabel.value=weekLabelFromDates(weekStart.value,weekEnd.value);collectFormToWeek();renderWeekSelector()};
 weekEnd.onchange=()=>{if(weekStart.value&&weekEnd.value&&!weekLabel.value.trim())weekLabel.value=weekLabelFromDates(weekStart.value,weekEnd.value);collectFormToWeek();renderWeekSelector()};
 document.addEventListener("input",e=>{if(["weekLabel","congregation","bibleReading","openingSong","openingComments","p1title","p3scripture","livingSong","livingNote","cbsReference","concludingComments","closingSong"].includes(e.target.id))collectFormToWeek()});
