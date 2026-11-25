@@ -59,7 +59,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
 <body>
 <div class="app">
  <div class="topbar">
-  <div class="brand"><h1>S-140 Meeting Scheduler <span style="font-size:.72rem;background:#173f49;color:#fff;padding:3px 7px;border-radius:999px;vertical-align:middle">v5.6</span></h1><small>Ndandanda ya msonkhano • Cinyanja</small></div>
+  <div class="brand"><h1>S-140 Meeting Scheduler <span style="font-size:.72rem;background:#173f49;color:#fff;padding:3px 7px;border-radius:999px;vertical-align:middle">v5.7</span></h1><small>Ndandanda ya msonkhano • Cinyanja</small></div>
   <div class="tabs">
    <button class="tabbtn active" data-tab="scheduleTab">Schedule</button>
    <button class="tabbtn" data-tab="weeksTab">Weeks</button>
@@ -71,7 +71,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
  </div>
 
  <section id="scheduleTab" class="tab">
-  <div id="versionBanner" class="notice ok" style="margin-top:14px"><strong>Running version:</strong> v5.6. Intelligent rotation and assignment review.</div><div id="standaloneBanner" class="notice warn hidden" style="margin-top:14px"><strong>Standalone mode:</strong> PDF import works, but JW.org automatic fetch needs online mode. Extract the application ZIP and double-click <strong>START_S140_ONLINE.bat</strong>.</div>
+  <div id="versionBanner" class="notice ok" style="margin-top:14px"><strong>Running version:</strong> v5.7. Automatic scheduling and assignment review.</div><div id="standaloneBanner" class="notice warn hidden" style="margin-top:14px"><strong>Standalone mode:</strong> PDF import works, but JW.org automatic fetch needs online mode. Extract the application ZIP and double-click <strong>START_S140_ONLINE.bat</strong>.</div>
   <div class="card">
    <div class="weekbar">
     <strong>Week:</strong>
@@ -86,7 +86,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
   </div>
 
   <div class="toolbar">
-   <button class="primary" id="saveBtn">Save</button><button class="primary" id="rotationBtn">Intelligent Auto Assign</button>
+   <button class="primary" id="saveBtn">Save</button><button class="primary" id="autoScheduleBtn">⚡ Generate Automatic Schedule</button><button id="rotationBtn">Review Assignment Suggestions</button>
    <button class="pdfbtn" id="pdfBtn">Download PDF</button>
    <button id="previewBtn">PDF Preview</button>
    <button id="printBtn">Print</button>
@@ -114,7 +114,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
     <div class="field"><label>Pemphero Loyamba</label><select class="assignment-select" data-role="prayer" id="openingPrayer"></select></div>
     <div class="field"><label>Mau Oyamba</label><input id="openingComments" value="1 min."><div class="smalltext muted">Cheyamani’s name appears automatically.</div></div>
    </div>
-   <div id="conflictBox"></div>
+   <div id="autoScheduleSummary" class="notice hidden" role="status"></div><div id="conflictBox"></div>
    <div class="notice ok"><strong>Assignment rotation:</strong> All roles count toward the two-week rest preference, including publisher and householder roles. Existing assignments are never overwritten by Auto Assign.</div>
   </div>
 
@@ -262,6 +262,15 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
  <iframe id="previewFrame"></iframe>
 </div></div>
 
+<div id="autoScheduleModal" class="modal hidden"><div class="modal-card">
+ <div class="modal-head"><h2>Generate Automatic Schedule</h2><button id="autoScheduleClose" class="closebtn">Close</button></div>
+ <p>Fill the current week's vacant roles using registered, active, available publishers with approved eligibility. Existing assignments stay unchanged. The schedule is saved as a draft, not finalized.</p>
+ <div id="autoSchedulePool" class="notice ok"></div>
+ <label class="switchrow"><input id="autoScheduleRecent" type="checkbox">If necessary, consider publishers used in the last two weeks or assigned in the next two weeks</label>
+ <label class="switchrow"><input id="autoScheduleVerified" type="checkbox">I have checked the workbook part types and publisher eligibility.</label>
+ <p class="muted smalltext">Student talks require separate approval in Publishers. Demonstrations use approved publisher and householder roles with compatible same-gender partners. Unfilled and unclassified parts will be reported.</p>
+ <div class="toolbar"><button class="primary" id="autoScheduleRun" disabled>Generate &amp; Save Schedule</button></div>
+ </div></div>
 <div id="rotationModal" class="modal hidden"><div class="modal-card">
  <div class="modal-head"><h2>Intelligent Assignment Review</h2><button id="rotationCloseBtn" class="closebtn">Close</button></div>
  <p>Review the workbook part types and each publisher's approved eligibility before applying. Existing names are never replaced. Recent use means an assignment in any role in the preceding two weeks.</p>
@@ -273,8 +282,8 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
  </div></div>
 <script>
 const SEED=[["Aaron Mzumara", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Amos Mzumara", "brother", ["prayer", "bibleReading", "ministryStudent", "ministryAssistant"]], ["Anastasia Mwandira", "sister", ["ministryStudent", "ministryAssistant"]], ["Beauty Banda", "sister", ["ministryStudent", "ministryAssistant"]], ["Biliat Phiri", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Chanda Mulenga", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Edson Daka", "brother", ["prayer", "bibleReading", "ministryStudent", "ministryAssistant"]], ["Edwin Mwanza", "brother", ["prayer", "bibleReading", "ministryStudent", "ministryAssistant"]], ["George Banda", "brother", ["prayer", "treasuresTalk", "spiritualGems", "bibleReading"]], ["Innocent Phiri", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Isaac Tembo", "brother", ["bibleReading", "ministryStudent", "ministryAssistant"]], ["Joyce Zulu", "sister", ["ministryStudent", "ministryAssistant"]], ["kondwan Mwandira", "brother", ["prayer", "bibleReading", "ministryStudent", "ministryAssistant"]], ["Laston Nyirongo", "brother", ["prayer", "ministryStudent", "ministryAssistant"]], ["Lotti Phiri", "brother", ["prayer", "treasuresTalk", "spiritualGems", "bibleReading"]], ["Mbewe Fransis", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Mbunge Elijah", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Nakiwe Mwanza", "sister", ["ministryStudent", "ministryAssistant"]], ["Nelia Chirwa", "sister", ["ministryStudent", "ministryAssistant"]], ["Pearson Kamanga", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Rosalyn Nkwazi", "sister", ["ministryStudent", "ministryAssistant"]], ["Royd Kalule", "brother", ["chairman", "prayer", "treasuresTalk", "spiritualGems"]], ["Saulos Phiri", "brother", ["prayer", "treasuresTalk", "spiritualGems", "bibleReading"]], ["Treser Njobvu", "sister", ["ministryStudent", "ministryAssistant"]], ["Victor Banda", "brother", ["bibleReading", "ministryStudent", "ministryAssistant", "cbsReader"]], ["victoria Mbewe", "sister", ["ministryStudent", "ministryAssistant"]]];
-const ROLE_LABELS={chairman:"Chairman",counselor:"Auxiliary Classroom Counselor",prayer:"Prayer",treasuresTalk:"Treasures talk",spiritualGems:"Spiritual Gems",bibleReading:"Bible Reading",ministryStudent:"Publisher / Student (Wophunzira)",ministryAssistant:"Householder / Assistant (Wothandiza)",livingTalk:"Living as Christians talk",cbsConductor:"CBS Conductor",cbsReader:"CBS Reader"};
-const BROTHER_ONLY=new Set(["chairman","counselor","prayer","treasuresTalk","spiritualGems","bibleReading","livingTalk","cbsConductor","cbsReader"]);
+const ROLE_LABELS={chairman:"Chairman",counselor:"Auxiliary Classroom Counselor",prayer:"Prayer",treasuresTalk:"Treasures talk",spiritualGems:"Spiritual Gems",bibleReading:"Bible Reading",ministryTalk:"Student talk (Wokamba — brothers only)",ministryStudent:"Publisher / Student (Wophunzira)",ministryAssistant:"Householder / Assistant (Wothandiza)",livingTalk:"Living as Christians talk",cbsConductor:"CBS Conductor",cbsReader:"CBS Reader"};
+const BROTHER_ONLY=new Set(["chairman","counselor","prayer","treasuresTalk","spiritualGems","bibleReading","livingTalk","cbsConductor","cbsReader","ministryTalk"]);
 const STORAGE_KEY="s140Scheduler";
 const CHECKPOINT_KEY=STORAGE_KEY+":recovery";
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
@@ -390,7 +399,7 @@ function confirmRecentUsage(pubId,role,newLabel){
  const info=recentUsageInfo(pubId,currentWeek(),null);
  return !(info&&info.weeks!==null&&info.weeks<=2)||confirm(formatRecentWarning(pubName(pubId)||"This publisher",info,newLabel));
 }
-function rotationRoleLabel(role){return role==="ministryTalk"?"Student talk":ROLE_LABELS[role]||role||"Assignment"}
+function rotationRoleLabel(role){return ROLE_LABELS[role]||role||"Assignment"}
 function lastAnyUsage(p,w){return recentUsageInfo(p.id,w,null)}
 function lastUsageLabel(p,w){
  const r=lastAnyUsage(p,w);if(!r)return "No recorded earlier assignment";
@@ -448,13 +457,14 @@ function toggleAux(){
  const on=auxEnabled.checked;document.querySelectorAll(".aux-only").forEach(x=>x.classList.toggle("hidden",!on));auxCounselorWrap.classList.toggle("hidden",!on);currentWeek().auxEnabled=on
 }
 function renderSchedule(){
+ $("autoScheduleSummary")?.classList.add("hidden");
  renderWeekSelector();restoreWeekToForm();renderMinistry();renderLiving();refreshAssignmentSelects();toggleAux();renderConflicts()
 }
 function studentGender(id){return pubById(id)?.gender||""}
 function ministryHallHTML(p,h,label){
  const talk=p.type==="talk",studentId=p[h].student,studentGen=studentGender(studentId),baseFilter=talk?"brother":(p[h].filter||"all"),assistantFilter=studentGen||baseFilter;
  return`<div class="hall"><h4>${label}</h4>${talk?'<span class="badge">Talk — brothers only</span>':`<div class="filters"><button class="filter ${baseFilter==="all"?"active":""}" data-hall="${h}" data-filter="all">All</button><button class="filter ${baseFilter==="brother"?"active":""}" data-hall="${h}" data-filter="brother">Brothers</button><button class="filter ${baseFilter==="sister"?"active":""}" data-hall="${h}" data-filter="sister">Sisters</button></div>`}
- <div class="${talk?"":"grid2"}"><div class="field"><label>${talk?"Wokamba / Speaker":"Wophunzira / Publisher"}</label><select class="ministry-select" data-hall="${h}" data-kind="student">${eligiblePublishers("ministryStudent",baseFilter,studentId,talk?"ministryTalk":"ministryStudent")}</select></div>
+ <div class="${talk?"":"grid2"}"><div class="field"><label>${talk?"Wokamba / Speaker":"Wophunzira / Publisher"}</label><select class="ministry-select" data-hall="${h}" data-kind="student">${eligiblePublishers(talk?"ministryTalk":"ministryStudent",baseFilter,studentId)}</select></div>
  ${talk?"":`<div class="field"><label>Wothandiza / Householder ${studentGen?`(${studentGen==="brother"?"Brother":"Sister"} only)`:""}</label><select class="ministry-select" data-hall="${h}" data-kind="assistant">${eligiblePublishers("ministryAssistant",assistantFilter,p[h].assistant)}</select></div>`}</div></div>`
 }
 function renderMinistry(){
@@ -556,7 +566,7 @@ function conflictIssues(w=currentWeek()){
  w.ministry.forEach((p,i)=>["main",...(w.auxEnabled?["aux"]:[])].forEach(h=>{if(p.type!=="talk"&&p[h].student&&p[h].student===p[h].assistant)issues.push({level:"error",text:`Part ${4+i} ${h}: student and assistant are the same person.`});if(p.type!=="talk"&&p[h].student&&p[h].assistant&&studentGender(p[h].student)!==studentGender(p[h].assistant))issues.push({level:"error",text:`Part ${4+i} ${h}: student and assistant must be the same gender.`})}));
  if(w.auxEnabled)w.ministry.forEach((p,i)=>{["student","assistant"].forEach(k=>{if(p.main[k]&&p.main[k]===p.aux[k])issues.push({level:"error",text:`Part ${4+i}: ${pubName(p.main[k])} is assigned in both Main Hall and Auxiliary Classroom at the same time.`})})});
  rec.forEach(r=>{
-  const p=pubById(r.publisherId),role=r.role==="ministryTalk"?"ministryStudent":r.role;
+  const p=pubById(r.publisherId),role=r.role;
   if(!p||!isEligible(p,role,w)||(r.role==="ministryTalk"&&p.gender!=="brother"))
    issues.push({level:"error",text:`${p?.name||"Unknown publisher"} is unavailable or ineligible for ${r.part}.`});
  });
@@ -1235,7 +1245,7 @@ function finalizeWeek(){
 }
 function clearCurrentAssignments(){if(!confirm("Clear all assigned names for this week? Titles, songs, dates and scriptures will remain."))return;clearWeekAssignments(currentWeek());saveState();renderSchedule()}
 
-function exportBackup(){collectFormToWeek();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="S140_Meeting_Scheduler_v5_6_Backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+function exportBackup(){collectFormToWeek();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="S140_Meeting_Scheduler_v5_7_Backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
 function saveCheckpoint(){
  try{localStorage.setItem(CHECKPOINT_KEY,JSON.stringify(state));return true}
  catch(e){alert("Could not create a recovery checkpoint. Export a backup before trying again.");return false}
@@ -1476,7 +1486,7 @@ function slotCandidates(w,slot,allowRecent=false){
  const used=new Set(assignmentRecords(w).map(x=>x.publisherId)),partner=slot.partner?pubById(slotValue(w,slot.partner)):null;
  if(slot.partner&&slotValue(w,slot.partner)&&!partner)return [];
  return state.publishers.filter(p=>{
-  if(used.has(p.id)||!isEligible(p,slot.role==="ministryTalk"?"ministryStudent":slot.role,w))return false;
+  if(used.has(p.id)||!isEligible(p,slot.role,w))return false;
   if(slot.filter&&slot.filter!=="all"&&p.gender!==slot.filter)return false;
   if(partner&&p.gender!==partner.gender)return false;
   const prev=lastAnyUsage(p,w);
@@ -1496,31 +1506,64 @@ function possibleRoles(p,w){
   slotSet(copy,slot.path,p.id);const ok=slotCandidates(copy,partner,true).length>0;slotSet(copy,slot.path,"");return ok;
  });
 }
+function unscheduledParts(w){
+ const out=[];
+ if(!w.fields.p1title||w.fields.p1title==="[Title]")out.push("Part 1 — missing title");
+ w.ministry.forEach((p,i)=>{if(!p.title||p.title==="[Title]"||!["demonstration","talk"].includes(p.type))out.push((4+i)+". "+(p.title||"Missing title")+" — verify part type/title")});
+ w.living.forEach((p,i)=>{if(!p.title||p.title==="[Title]")out.push((firstLivingNumber(w)+i)+". Living as Christians — missing title")});
+ return out;
+}
 function buildRotationPlan(original,allowRecent=false){
- const w=JSON.parse(JSON.stringify(original)),slots=rotationSlots(w),suggestions=[],unfilled=[];
- // Work with the most constrained slot or same-gender pair first.
- const pending=slots.filter(s=>!slotValue(w,s.path));
- while(pending.length){
-  const choices=pending.map(s=>{
-   const candidates=slotCandidates(w,s,allowRecent);
-   const partner=s.partner&&!slotValue(w,s.partner)?pending.find(x=>JSON.stringify(x.path)===JSON.stringify(s.partner)):null;
-   const pairs=[];
-   for(const p of candidates){
-    if(!partner){pairs.push([p,null]);continue}
-    slotSet(w,s.path,p.id);
-    for(const q of slotCandidates(w,partner,allowRecent))pairs.push([p,q]);
-    slotSet(w,s.path,"");
-   }
-   return{s,partner,pairs};
-  }).sort((a,b)=>a.pairs.length-b.pairs.length);
-  const {s,partner,pairs}=choices[0];
-  pending.splice(pending.indexOf(s),1);if(partner)pending.splice(pending.indexOf(partner),1);
-  if(!pairs.length){unfilled.push(s.label);if(partner)unfilled.push(partner.label);continue}
-  const [p,q]=pairs[0];
-  slotSet(w,s.path,p.id);suggestions.push({slot:s,id:p.id});
-  if(partner&&q){slotSet(w,partner.path,q.id);suggestions.push({slot:partner,id:q.id})}
+ const slots=rotationSlots(original).filter(s=>!slotValue(original,s.path)),groups=[],seen=new Set(),key=s=>JSON.stringify(s.path);
+ const strict=new Map(slots.map(s=>[key(s),slotCandidates(original,s,false)]));
+ const all=new Map(slots.map(s=>[key(s),allowRecent?slotCandidates(original,s,true):strict.get(key(s))]));
+ const strictIds=new Map([...strict].map(([k,v])=>[k,new Set(v.map(p=>p.id))]));
+ for(const s of slots){
+  if(seen.has(key(s)))continue;seen.add(key(s));
+  const mate=s.partner&&!slotValue(original,s.partner)?slots.find(x=>key(x)===JSON.stringify(s.partner)):null;
+  if(mate)seen.add(key(mate));
+  const candidates=all.get(key(s)),options=[];
+  function add(ps){
+   const items=ps.map((p,i)=>({slot:i?mate:s,id:p.id}));
+   const recent=items.reduce((n,x)=>n+(!strictIds.get(key(x.slot)).has(x.id)?1:0),0);
+   const rank=ps.reduce((n,p,i)=>n+all.get(key(i?mate:s)).findIndex(x=>x.id===p.id),0);
+   options.push({items,ids:ps.map(p=>p.id),recent,rank});
+  }
+  for(const p of candidates){
+   if(!mate){add([p]);continue}
+   for(const q of all.get(key(mate)))if(p.id!==q.id&&p.gender===q.gender)add([p,q]);
+  }
+  options.sort((a,b)=>a.recent-b.recent||a.rank-b.rank);
+  groups.push({slots:mate?[s,mate]:[s],options});
  }
- return{suggestions,unfilled};
+ const total=slots.length,start=performance.now(),limit=1200,maxNodes=35000;
+ let best={items:[],recent:Infinity,rank:Infinity},nodes=0,timedOut=false,optimal=false;
+ const used=new Set(),picked=[];
+ function consider(recent,rank){
+  if(picked.length>best.items.length||(picked.length===best.items.length&&(recent<best.recent||(recent===best.recent&&rank<best.rank))))best={items:picked.slice(),recent,rank};
+  if(best.items.length===total&&best.recent===0)optimal=true;
+ }
+ function search(remaining,recent,rank){
+  consider(recent,rank);
+  if(optimal||!remaining.length)return;
+  if(++nodes>maxNodes||performance.now()-start>limit){timedOut=true;return}
+  const choices=remaining.map(g=>({g,valid:g.options.filter(o=>o.ids.every(id=>!used.has(id)))}));
+  const bound=picked.length+choices.reduce((n,x)=>n+(x.valid.length?x.g.slots.length:0),0);
+  if(bound<best.items.length||(bound===best.items.length&&recent>best.recent))return;
+  choices.sort((a,b)=>a.valid.length-b.valid.length||b.g.slots.length-a.g.slots.length);
+  const {g,valid}=choices[0],rest=remaining.filter(x=>x!==g);
+  for(const o of valid){
+   o.ids.forEach(id=>used.add(id));picked.push(...o.items);
+   search(rest,recent+o.recent,rank+o.rank);
+   picked.splice(picked.length-o.items.length,o.items.length);o.ids.forEach(id=>used.delete(id));
+   if(optimal||timedOut)return;
+  }
+  search(rest,recent,rank);
+ }
+ search(groups,0,0);
+ const placed=new Set(best.items.map(x=>key(x.slot)));
+ const unfilled=slots.filter(s=>!placed.has(key(s))).map(s=>s.label);
+ return{suggestions:best.items,unfilled,unclassified:unscheduledParts(original),recentCount:Number.isFinite(best.recent)?best.recent:0,timedOut,searchNodes:nodes,total};
 }
 let rotationPlan=null;
 function rotationFingerprint(){return JSON.stringify({week:currentWeek(),publishers:state.publishers,weeks:state.weeks,history:state.history})}
@@ -1534,8 +1577,8 @@ function refreshRotationOptions(){
 function recalculateRotation(){
  collectFormToWeek();const w=currentWeek(),allow=$("rotationAllowRecent").checked;
  rotationPlan={...buildRotationPlan(w,allow),fingerprint:rotationFingerprint(),allow};
- const {suggestions,unfilled}=rotationPlan;
- $("rotationResults").innerHTML=`<div class="notice ok">${suggestions.length} suggested assignments; ${unfilled.length} eligible slots still unfilled. Blank or unclassified parts are not automatically assigned.</div>`+suggestions.map(x=>`<div class="history-row"><div>${esc(x.slot.label)}</div><div><strong>${esc(pubName(x.id))}</strong></div><div>${esc(lastUsageLabel(pubById(x.id),w)+(slotCandidates(w,x.slot,false).some(p=>p.id===x.id)?"":" · Review recent/nearby use"))}</div></div>`).join("")+(unfilled.length?`<div class="notice warn"><strong>Needs manual review:</strong><br>${unfilled.map(esc).join("<br>")}</div>`:"");
+ const {suggestions,unfilled,unclassified,timedOut}=rotationPlan;
+ $("rotationResults").innerHTML=`<div class="notice ok">${suggestions.length} suggested assignments; ${unfilled.length} eligible slots still unfilled. Blank or unclassified parts are not automatically assigned.${timedOut?" Search limit reached; best result found.":""}</div>`+suggestions.map(x=>`<div class="history-row"><div>${esc(x.slot.label)}</div><div><strong>${esc(pubName(x.id))}</strong></div><div>${esc(lastUsageLabel(pubById(x.id),w)+(slotCandidates(w,x.slot,false).some(p=>p.id===x.id)?"":" · Review recent/nearby use"))}</div></div>`).join("")+((unfilled.length||unclassified.length)?`<div class="notice warn"><strong>Needs manual review:</strong><br>${[...unfilled,...unclassified].map(esc).join("<br>")}</div>`:"");
  $("rotationApplyBtn").disabled=!suggestions.length||!$("rotationConfirmedTypes").checked;
  refreshRotationOptions();
 }
@@ -1556,6 +1599,38 @@ function applyRotation(){
  if(!confirm("Apply "+rotationPlan.suggestions.length+" suggestions without changing existing assignments?"))return;
  if(!saveCheckpoint())return;
  Object.assign(w,copy);saveState();$("rotationModal").classList.add("hidden");renderEverything();
+}
+function openAutoSchedule(){
+ collectFormToWeek();const w=currentWeek();
+ $("autoScheduleRecent").checked=false;$("autoScheduleVerified").checked=false;$("autoScheduleRun").disabled=true;
+ const active=state.publishers.filter(p=>p.active&&isAvailable(p,w));
+ const vacant=rotationSlots(w).filter(s=>!slotValue(w,s.path)).length;
+ $("autoSchedulePool").textContent=active.length+" active and available publishers • "+vacant+" recognized vacant roles • "+assignmentRecords(w).length+" existing assignments kept.";
+ $("autoScheduleModal").classList.remove("hidden");
+}
+function executeAutoSchedule(){
+ if(!$("autoScheduleVerified").checked)return alert("Confirm that the workbook part types and publisher eligibility have been checked.");
+ collectFormToWeek();const w=currentWeek();
+ if(w.archived)return alert("Unarchive this week before scheduling.");
+ if(conflictIssues(w).some(x=>x.level==="error"))return alert("Resolve existing assignment errors before automatic scheduling. No names were changed.");
+ const allow=$("autoScheduleRecent").checked,plan=buildRotationPlan(w,allow),copy=JSON.parse(JSON.stringify(w));
+ for(const x of plan.suggestions){
+  if(slotValue(copy,x.slot.path)||!slotCandidates(copy,x.slot,allow).some(p=>p.id===x.id))return alert("A proposed assignment failed validation. No names were changed.");
+  slotSet(copy,x.slot.path,x.id);
+ }
+ if(conflictIssues(copy).some(x=>x.level==="error"))return alert("The proposed schedule contains a conflict. No names were changed.");
+ const remaining=[...plan.unfilled,...plan.unclassified];
+ const status=plan.suggestions.length+" new assignments; "+plan.unfilled.length+" recognized vacancies remain; "+plan.unclassified.length+" parts need workbook review; "+plan.recentCount+" recent/nearby-use exceptions.";
+ if(plan.suggestions.length){
+  if(!confirm(status+(plan.timedOut?" Search limit reached; best result found.":"")+" Save as a draft? Existing assignments will be kept."))return;
+  if(!saveCheckpoint())return;
+  Object.assign(w,copy);saveState();
+ }
+ $("autoScheduleModal").classList.add("hidden");renderEverything();
+ const panel=$("autoScheduleSummary");
+ panel.className="notice "+(remaining.length||plan.timedOut?"warn":"ok");
+ panel.innerHTML="<strong>"+(remaining.length?"Automatic schedule needs review": "Automatic scheduling complete")+"</strong><br>"+esc(status)+(plan.timedOut?"<br>Search limit reached; this may not be the most complete schedule.":"")+(remaining.length?"<br><strong>Unfilled / unclassified:</strong><br>"+remaining.map(esc).join("<br>"):"")+(plan.suggestions.length?"<br>Saved as a draft. Use Backup to undo this update if needed.":"<br>No new names were assigned.");
+ panel.classList.remove("hidden");
 }
 function renderEverything(){renderEligibility();renderTemplateSelectors();renderSchedule();renderWeeks();renderPublishers();renderTemplates()}
 const weekSelector=$("weekSelector"),weekStatus=$("weekStatus"),archiveWeekBtn=$("archiveWeekBtn"),weekLabel=$("weekLabel"),weekStart=$("weekStart"),weekEnd=$("weekEnd"),congregation=$("congregation"),bibleReading=$("bibleReading"),auxEnabled=$("auxEnabled"),auxCounselorWrap=$("auxCounselorWrap"),ministryParts=$("ministryParts"),livingParts=$("livingParts"),cbsNumber=$("cbsNumber"),conflictBox=$("conflictBox"),weekSearch=$("weekSearch"),weekFilter=$("weekFilter"),weekSort=$("weekSort"),weeksList=$("weeksList"),newWeekStart=$("newWeekStart"),newWeekEnd=$("newWeekEnd"),newWeekLabel=$("newWeekLabel"),newWeekTemplate=$("newWeekTemplate"),publisherList=$("publisherList"),pubSearch=$("pubSearch"),pubFilter=$("pubFilter"),eligibilityGrid=$("eligibilityGrid"),pubNameInput=$("pubName"),pubGender=$("pubGender"),pubActive=$("pubActive"),addPublisherBtn=$("addPublisherBtn"),cancelEditBtn=$("cancelEditBtn"),profileTitle=$("profileTitle"),profileBody=$("profileBody"),profileModal=$("profileModal"),templateName=$("templateName"),templateDesc=$("templateDesc"),templateList=$("templateList"),templateModalBody=$("templateModalBody"),templateModal=$("templateModal"),previewFrame=$("previewFrame"),previewWrap=$("previewWrap"),installBtn=$("installBtn");
@@ -1578,6 +1653,7 @@ document.addEventListener("change",e=>{
 auxEnabled.onchange=()=>{currentWeek().auxEnabled=auxEnabled.checked;saveState();renderSchedule()};
 addMinistryBtn.onclick=()=>{currentWeek().ministry.push({id:uid("m"),title:"[Title]",time:"5 min.",type:"demonstration",main:{student:"",assistant:"",filter:"all"},aux:{student:"",assistant:"",filter:"all"}});saveState();renderSchedule()};
 addLivingBtn.onclick=()=>{currentWeek().living.push({id:uid("l"),title:"[Title]",time:"10 min.",person:""});saveState();renderSchedule()};
+$("autoScheduleBtn").onclick=openAutoSchedule;$("autoScheduleClose").onclick=()=>$("autoScheduleModal").classList.add("hidden");$("autoScheduleVerified").onchange=()=>$("autoScheduleRun").disabled=!$("autoScheduleVerified").checked;$("autoScheduleRun").onclick=executeAutoSchedule;
 $("rotationBtn").onclick=openRotation;$("rotationCloseBtn").onclick=()=>$("rotationModal").classList.add("hidden");$("rotationRefreshBtn").onclick=recalculateRotation;$("rotationAllowRecent").onchange=recalculateRotation;$("rotationConfirmedTypes").onchange=()=>$("rotationApplyBtn").disabled=!rotationPlan?.suggestions.length||!$("rotationConfirmedTypes").checked;$("rotationPublisher").onchange=refreshRotationOptions;$("rotationApplyBtn").onclick=applyRotation;
 saveBtn.onclick=()=>{collectFormToWeek();alert("Saved on this device.")};pdfBtn.onclick=()=>{collectFormToWeek();downloadPdfForWeek(currentWeek())};previewBtn.onclick=previewPdf;previewDownloadBtn.onclick=()=>downloadPdfForWeek(currentWeek());closePreviewBtn.onclick=closePreview;printBtn.onclick=printCurrent;finalizeBtn.onclick=finalizeWeek;clearBtn.onclick=clearCurrentAssignments;
 createWeekBtn.onclick=createWeek;fetchJwBtn.onclick=()=>importJw("new");refreshJwBtn.onclick=()=>importJw("current");weekPdfInput.onchange=e=>{const f=e.target.files[0];if(f)importPdf(f,"new");e.target.value=""};currentPdfInput.onchange=e=>{const f=e.target.files[0];if(f)importPdf(f,"current");e.target.value=""};

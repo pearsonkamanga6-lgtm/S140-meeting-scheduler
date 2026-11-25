@@ -1,8 +1,8 @@
 {
   "name": "s140-meeting-scheduler",
-  "version": "5.6.0",
+  "version": "5.7.0",
   "private": true,
-  "description": "S-140 Meeting Scheduler v5.6 - Intelligent assignment rotation",
+  "description": "S-140 Meeting Scheduler v5.7 - Automatic scheduling",
   "scripts": {
     "start": "node server.js"
   },
