@@ -59,7 +59,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
 <body>
 <div class="app">
  <div class="topbar">
-  <div class="brand"><h1>S-140 Meeting Scheduler <span style="font-size:.72rem;background:#173f49;color:#fff;padding:3px 7px;border-radius:999px;vertical-align:middle">v5.8</span></h1><small>Ndandanda ya msonkhano • Cinyanja</small></div>
+  <div class="brand"><h1>S-140 Meeting Scheduler <span style="font-size:.72rem;background:#173f49;color:#fff;padding:3px 7px;border-radius:999px;vertical-align:middle">v5.9</span></h1><small>Ndandanda ya msonkhano • Cinyanja</small></div>
   <div class="tabs">
    <button class="tabbtn active" data-tab="scheduleTab">Schedule</button>
    <button class="tabbtn" data-tab="weeksTab">Weeks</button>
@@ -71,7 +71,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
  </div>
 
  <section id="scheduleTab" class="tab">
-  <div id="versionBanner" class="notice ok" style="margin-top:14px"><strong>Running version:</strong> v5.8. Published-week discovery and automatic scheduling.</div><div id="standaloneBanner" class="notice warn hidden" style="margin-top:14px"><strong>Standalone mode:</strong> PDF import works, but JW.org automatic fetch needs online mode. Extract the application ZIP and double-click <strong>START_S140_ONLINE.bat</strong>.</div>
+  <div id="versionBanner" class="notice ok" style="margin-top:14px"><strong>Running version:</strong> v5.9. Published-week discovery and automatic scheduling.</div><div id="standaloneBanner" class="notice warn hidden" style="margin-top:14px"><strong>Standalone mode:</strong> PDF import works, but JW.org automatic fetch needs online mode. Extract the application ZIP and double-click <strong>START_S140_ONLINE.bat</strong>.</div>
   <div class="card">
    <div class="weekbar">
     <strong>Week:</strong>
@@ -258,7 +258,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
 </div></div>
 
 <div id="previewWrap" class="preview-wrap hidden"><div class="preview-card">
- <div class="modal-head"><h2>PDF Preview</h2><div class="actions"><button class="pdfbtn" id="previewDownloadBtn">Download PDF</button><button id="closePreviewBtn">Close</button></div></div>
+ <div class="modal-head"><h2 id="pdfPreviewTitle">PDF Preview</h2><div class="actions"><button class="pdfbtn" id="previewDownloadBtn">Download PDF</button><button id="closePreviewBtn">Close</button></div></div>
  <iframe id="previewFrame"></iframe>
 </div></div>
 
@@ -269,6 +269,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
  <label class="switchrow"><input type="checkbox" id="onlineScheduleRecent">When necessary, allow recent-use exceptions (last/next two weeks)</label>
  <label class="switchrow"><input type="checkbox" id="onlineScheduleVerified">I have checked the publisher eligibility register and will review the imported meeting parts and generated drafts before finalizing.</label>
  <div class="toolbar"><button class="primary" id="onlineScheduleRun" disabled>Discover, Import &amp; Generate Drafts</button><button id="onlineScheduleApply" class="primary" disabled>Save All Generated Weeks</button></div>
+ <div class="toolbar hidden" id="onlineSchedulePdfTools"><button class="pdfbtn" id="onlinePreviewAll">Preview All Suggested PDFs</button><button class="pdfbtn" id="onlineDownloadAll">Download All Suggested Weeks (PDF)</button></div>
  <div id="onlineScheduleStatus" class="notice ok" role="status">Ready to search the official catalogue.</div><div id="onlineScheduleResults"></div>
  </div></div>
 <div id="autoScheduleModal" class="modal hidden"><div class="modal-card">
@@ -1257,7 +1258,7 @@ function finalizeWeek(){
 }
 function clearCurrentAssignments(){if(!confirm("Clear all assigned names for this week? Titles, songs, dates and scriptures will remain."))return;clearWeekAssignments(currentWeek());saveState();renderSchedule()}
 
-function exportBackup(){collectFormToWeek();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="S140_Meeting_Scheduler_v5_8_Backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+function exportBackup(){collectFormToWeek();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="S140_Meeting_Scheduler_v5_9_Backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
 function saveCheckpoint(){
  try{localStorage.setItem(CHECKPOINT_KEY,JSON.stringify(state));return true}
  catch(e){alert("Could not create a recovery checkpoint. Export a backup before trying again.");return false}
@@ -1290,7 +1291,7 @@ function restoreCheckpoint(){
 }
 function pdfEscape(s){return clean(s).replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)")}
 function hexRgb(hex){const h=hex.replace("#","");return[parseInt(h.slice(0,2),16)/255,parseInt(h.slice(2,4),16)/255,parseInt(h.slice(4,6),16)/255]}
-function buildPdfBlob(w){
+function buildPdfPage(w,draftStatus=""){
  const W=841.89,H=595.28,M=24,R=W-M,CW=R-M;const cmds=[];const meas=document.createElement("canvas").getContext("2d");
  const colors={teal:"#008a9a",gold:"#d38a00",red:"#c92834",blue:"#356fbd",text:"#252d30",muted:"#66767c",line:"#b9c4c8",light:"#f6f8f8"};
  const rgb=h=>hexRgb(h).map(n=>n.toFixed(3)).join(" ");
@@ -1305,6 +1306,7 @@ function buildPdfBlob(w){
  function wrap(txt,max,size,bold=false,maxLines=2){txt=clean(txt);if(!txt)return[];const words=txt.split(" ");let lines=[],cur="";for(const word of words){const n=cur?cur+" "+word:word;if(width(n,size,bold)<=max||!cur)cur=n;else{lines.push(cur);cur=word;if(lines.length===maxLines-1)break}}if(cur)lines.push(cur);return lines.slice(0,maxLines)}
  const rows=4+w.ministry.length+w.living.length;
  const rowH=Math.max(23.5,Math.min(31,(H-268)/rows));const bodyFont=rowH>=29?10.8:rowH>=26?10.1:9.2;const smallFont=bodyFont-1.4;const f=w.fields;
+ if(draftStatus)text(draftStatus,M,16,8.5,true,colors.red);
  text("MSONKHANO WA MKATI MWA MLUNGU",M,34,17,true,colors.text);
  const topRightX=R-305,topRightW=285;
  cellText(w.congregation,topRightX,20,topRightW,21,10.5,true,colors.muted,"left",1);
@@ -1462,15 +1464,48 @@ function buildPdfBlob(w){
  const footerH=27,footerMid=M+CW*.50;
  cellText(`Mau Othela (${f.concludingComments||"3 min."}) - ${pubName(f.chairman)||"-"}`,M,y,CW*.50-5,footerH,9.6,true,colors.text,"left",2);
  cellText(`Nyimbo ${f.closingSong||"-"} ndi Pemphero: ${pubName(f.closingPrayer)||"-"}`,footerMid+5,y,CW*.50-5,footerH,9.5,true,colors.blue,"left",2);
- const scale=Math.min(1,(H-2*M)/Math.max(1,y+footerH-M));const stream=scale<1?`q ${scale.toFixed(6)} 0 0 ${scale.toFixed(6)} ${((W-W*scale)/2).toFixed(3)} ${((H-M)*(1-scale)).toFixed(3)} cm\n${cmds.join("\n")}\nQ`:cmds.join("\n");const enc=new TextEncoder(),parts=[],offs=[0];const ps=s=>parts.push(enc.encode(s));ps("%PDF-1.4\n");
- function obj(n,body,streamBytes){offs[n]=parts.reduce((a,b)=>a+b.length,0);ps(`${n} 0 obj\n${body}`);if(streamBytes){ps("\nstream\n");parts.push(streamBytes);ps("\nendstream")}ps("\nendobj\n")}
- obj(1,"<< /Type /Catalog /Pages 2 0 R >>");obj(2,"<< /Type /Pages /Kids [3 0 R] /Count 1 >>");obj(3,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>`);obj(4,"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");obj(5,"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");const sb=enc.encode(stream);obj(6,`<< /Length ${sb.length} >>`,sb);
- const xref=parts.reduce((a,b)=>a+b.length,0);ps("xref\n0 7\n0000000000 65535 f \n");for(let i=1;i<=6;i++)ps(String(offs[i]).padStart(10,"0")+" 00000 n \n");ps(`trailer\n<< /Size 7 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
+ const scale=Math.min(1,(H-2*M)/Math.max(1,y+footerH-M));const stream=scale<1?`q ${scale.toFixed(6)} 0 0 ${scale.toFixed(6)} ${((W-W*scale)/2).toFixed(3)} ${((H-M)*(1-scale)).toFixed(3)} cm\n${cmds.join("\n")}\nQ`:cmds.join("\n");return {W,H,stream}
+}
+function buildPdfDocument(pages){
+ if(!pages.length)throw Error("No schedules selected for PDF.");
+ const enc=new TextEncoder(),parts=[],offs=[0];let byteCount=0;
+ const append=b=>{parts.push(b);byteCount+=b.length},ps=s=>append(enc.encode(s));
+ ps("%PDF-1.4\n");
+ function obj(n,body,streamBytes){offs[n]=byteCount;ps(`${n} 0 obj\n${body}`);if(streamBytes){ps("\nstream\n");append(streamBytes);ps("\nendstream")}ps("\nendobj\n")}
+ obj(1,"<< /Type /Catalog /Pages 2 0 R >>");
+ const kids=pages.map((_,i)=>5+i*2+" 0 R").join(" ");
+ obj(2,`<< /Type /Pages /Kids [${kids}] /Count ${pages.length} >>`);
+ obj(3,"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");
+ obj(4,"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");
+ pages.forEach(({W,H,stream},i)=>{
+  const n=5+i*2,sb=enc.encode(stream);
+  obj(n,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${n+1} 0 R >>`);
+  obj(n+1,`<< /Length ${sb.length} >>`,sb);
+ });
+ const count=5+2*pages.length,xref=byteCount;
+ ps(`xref\n0 ${count}\n0000000000 65535 f \n`);
+ for(let i=1;i<count;i++)ps(String(offs[i]).padStart(10,"0")+" 00000 n \n");
+ ps(`trailer\n<< /Size ${count} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
  return new Blob(parts,{type:"application/pdf"})
 }
-function downloadPdfForWeek(w){const blob=buildPdfBlob(w),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=`S140_${clean(w.label||"Meeting").replace(/[^A-Za-z0-9_-]+/g,"_")}.pdf`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)}
-function previewPdf(){collectFormToWeek();const url=URL.createObjectURL(buildPdfBlob(currentWeek()));previewFrame.src=url;previewWrap.classList.remove("hidden");previewWrap.dataset.url=url}
-function closePreview(){const u=previewWrap.dataset.url;if(u)URL.revokeObjectURL(u);previewWrap.classList.add("hidden");previewFrame.src="about:blank"}
+function buildPdfBlob(w){return buildPdfDocument([buildPdfPage(w)])}
+function pdfFilename(w){return "S140_"+(w.startDate||"Meeting")+".pdf"}
+function downloadPdfBlob(blob,filename){
+ const url=URL.createObjectURL(blob),a=document.createElement("a");
+ a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),30000)
+}
+function downloadPdfForWeek(w){if(w)downloadPdfBlob(buildPdfBlob(w),pdfFilename(w))}
+let previewPdfFile=null;
+function showSchedulePdf(blob,filename,title){
+ closePreview();previewPdfFile={blob,filename};
+ const url=URL.createObjectURL(blob);
+ $("pdfPreviewTitle").textContent=title;
+ previewFrame.src=url;previewWrap.dataset.url=url;previewWrap.classList.remove("hidden")
+}
+function previewPdf(){collectFormToWeek();const w=currentWeek();showSchedulePdf(buildPdfBlob(w),pdfFilename(w),"PDF Preview")}
+function closePreview(){const u=previewWrap.dataset.url;if(u)URL.revokeObjectURL(u);delete previewWrap.dataset.url;previewWrap.classList.add("hidden");previewFrame.src="about:blank";previewPdfFile=null}
+function downloadPreviewPdf(){if(previewPdfFile)downloadPdfBlob(previewPdfFile.blob,previewPdfFile.filename)}
 function printCurrent(){collectFormToWeek();const url=URL.createObjectURL(buildPdfBlob(currentWeek()));const w=window.open(url,"_blank");if(!w)return alert("Your browser blocked the print preview. Use Download PDF instead.");setTimeout(()=>{try{w.print()}catch(e){}},1000)}
 
 function rotationSlots(w){
@@ -1729,7 +1764,7 @@ function planPublishedWeeks(base,programmes,allowRecent,aux){
 let onlineSchedulePlan=null,onlineScheduleBusy=false;
 function openOnlineSchedule(){
  if(onlineScheduleBusy)return;
- collectFormToWeek();onlineSchedulePlan=null;
+ collectFormToWeek();onlineSchedulePlan=null;$("onlineSchedulePdfTools").classList.add("hidden");
  $("onlineScheduleFrom").value=mondayOf([new Date().getFullYear(),String(new Date().getMonth()+1).padStart(2,"0"),String(new Date().getDate()).padStart(2,"0")].join("-"));
  $("onlineScheduleAux").value=currentWeek().auxEnabled?"yes":"no";
  $("onlineScheduleRecent").checked=false;$("onlineScheduleVerified").checked=false;
@@ -1742,7 +1777,7 @@ async function runOnlineSchedule(){
  collectFormToWeek();const from=mondayOf($("onlineScheduleFrom").value);
  if(!parseDate(from))return alert("Choose a valid starting week.");
  const base=JSON.parse(JSON.stringify(state)),fingerprint=JSON.stringify(state),allow=$("onlineScheduleRecent").checked,aux=$("onlineScheduleAux").value==="yes";
- onlineScheduleBusy=true;onlineSchedulePlan=null;$("onlineScheduleRun").disabled=true;$("onlineScheduleApply").disabled=true;$("onlineScheduleClose").disabled=true;
+ onlineScheduleBusy=true;onlineSchedulePlan=null;$("onlineSchedulePdfTools").classList.add("hidden");$("onlineScheduleRun").disabled=true;$("onlineScheduleApply").disabled=true;$("onlineScheduleClose").disabled=true;
  const status=$("onlineScheduleStatus"),progress=t=>{status.textContent=t};
  $("onlineScheduleResults").innerHTML="";
  try{
@@ -1760,11 +1795,36 @@ async function runOnlineSchedule(){
   const total=plan.report.reduce((n,r)=>n+r.added,0);
   const gaps=[];const dates=new Set(found.weeks.map(w=>w.date));for(let day=from;found.weeks.length&&day<=found.weeks.at(-1).date;day=plusDays(day,7))if(!dates.has(day))gaps.push(day);
   progress(found.weeks.length+" published weeks discovered; "+programmes.length+" programmes imported for review; "+total+" new assignments proposed. Nothing saved yet.");
-  const rendered=plan.report.map(r=>`<div class="week-item"><div><strong>${esc(r.date)} — ${esc(r.status)}</strong><div class="muted">${r.added} new assignments; ${r.missing.length} outstanding; ${r.recent||0} recent-use exceptions${r.timedOut?" · search limit reached":""}</div>${r.missing.length?`<details><summary>Outstanding roles / parts</summary>${r.missing.map(x=>"<div>"+esc(x)+"</div>").join("")}</details>`:""}${r.weekId?`<details><summary>Review proposed programme and assignments</summary>${batchReviewHtml(plan.next.weeks.find(w=>w.id===r.weekId))}</details>`:""}</div></div>`).join("");
+  const rendered=plan.report.map(r=>`<div class="week-item"><div><strong>${esc(r.date)} — ${esc(r.status)}</strong><div class="muted">${r.added} new assignments; ${r.missing.length} outstanding; ${r.recent||0} recent-use exceptions${r.timedOut?" · search limit reached":""}</div>${r.missing.length?`<details><summary>Outstanding roles / parts</summary>${r.missing.map(x=>"<div>"+esc(x)+"</div>").join("")}</details>`:""}${r.weekId?`<details><summary>Review proposed programme and assignments</summary>${batchReviewHtml(plan.next.weeks.find(w=>w.id===r.weekId))}</details><div class="row-actions" style="margin-top:8px"><button class="small pdfbtn batch-preview" data-week-id="${esc(r.weekId)}">Preview Suggested PDF</button><button class="small pdfbtn batch-download" data-week-id="${esc(r.weekId)}">Download Suggested PDF</button></div>`:""}</div></div>`).join("");
   $("onlineScheduleResults").innerHTML=rendered+(gaps.length?`<div class="notice warn">No published weekly programme link found for: ${gaps.map(esc).join(", ")}. Check for special events or missing publication links.</div>`:"")+(errors.length?`<div class="notice warn"><strong>Could not import automatically:</strong><br>${errors.map(esc).join("<br>")}</div>`:"");
   $("onlineScheduleApply").disabled=JSON.stringify(plan.next)===fingerprint;
+  $("onlineSchedulePdfTools").classList.toggle("hidden",!plan.report.some(r=>r.weekId));
+  $("onlineScheduleResults").querySelectorAll(".batch-preview").forEach(b=>b.onclick=()=>exportOnlineSchedulePdf(b.dataset.weekId,true));
+  $("onlineScheduleResults").querySelectorAll(".batch-download").forEach(b=>b.onclick=()=>exportOnlineSchedulePdf(b.dataset.weekId,false));
  }catch(e){progress("Stopped: "+e.message+". Existing data unchanged.")}
  finally{onlineScheduleBusy=false;$("onlineScheduleRun").disabled=!$("onlineScheduleVerified").checked;$("onlineScheduleClose").disabled=false}
+}
+function suggestedPdf(plan,weekId=null){
+ const reports=plan.report.filter(r=>r.weekId&&(!weekId||r.weekId===weekId)).sort((a,b)=>a.date.localeCompare(b.date));
+ if(!reports.length)throw Error("No generated weekly programme is available for PDF.");
+ const pages=reports.map(r=>{
+  const w=plan.next.weeks.find(w=>w.id===r.weekId);
+  if(!w)throw Error("Suggested week is missing.");
+  const status=r.missing.length?"DRAFT - INCOMPLETE / REVIEW REQUIRED":"DRAFT - REVIEW BEFORE FINALIZING";
+  return buildPdfPage(w,status);
+ });
+ const name=weekId?"S140_Suggested_"+reports[0].date+".pdf":"S140_Suggested_"+reports[0].date+"_to_"+reports.at(-1).date+".pdf";
+ return {blob:buildPdfDocument(pages),filename:name,count:pages.length};
+}
+function exportOnlineSchedulePdf(weekId=null,preview=false){
+ if(!onlineSchedulePlan||onlineScheduleBusy)return alert("Generate the online schedules first.");
+ const plan=onlineSchedulePlan;
+ if(JSON.stringify(state)!==plan.fingerprint||JSON.stringify(plan.options)!==JSON.stringify([mondayOf($("onlineScheduleFrom").value),$("onlineScheduleRecent").checked,$("onlineScheduleAux").value==="yes"]))return alert("Data or options changed. Generate again before exporting.");
+ try{
+  const file=suggestedPdf(plan,weekId);
+  if(preview)showSchedulePdf(file.blob,file.filename,"Suggested Schedule PDF ("+file.count+" week"+(file.count===1?"":"s")+")");
+  else downloadPdfBlob(file.blob,file.filename)
+ }catch(e){alert("Unable to generate PDF: "+e.message)}
 }
 function batchReviewHtml(w){
  if(!w)return "";
@@ -1834,10 +1894,10 @@ document.addEventListener("change",e=>{
 auxEnabled.onchange=()=>{currentWeek().auxEnabled=auxEnabled.checked;saveState();renderSchedule()};
 addMinistryBtn.onclick=()=>{currentWeek().ministry.push({id:uid("m"),title:"[Title]",time:"5 min.",type:"demonstration",main:{student:"",assistant:"",filter:"all"},aux:{student:"",assistant:"",filter:"all"}});saveState();renderSchedule()};
 addLivingBtn.onclick=()=>{currentWeek().living.push({id:uid("l"),title:"[Title]",time:"10 min.",person:""});saveState();renderSchedule()};
-$("onlineScheduleBtn").onclick=openOnlineSchedule;$("onlineScheduleWeeksBtn").onclick=openOnlineSchedule;$("onlineScheduleClose").onclick=()=>{if(!onlineScheduleBusy)$("onlineScheduleModal").classList.add("hidden")};$("onlineScheduleVerified").onchange=()=>{$("onlineScheduleRun").disabled=onlineScheduleBusy||!$("onlineScheduleVerified").checked;if(!$("onlineScheduleVerified").checked)$("onlineScheduleApply").disabled=true};$("onlineScheduleRun").onclick=runOnlineSchedule;$("onlineScheduleApply").onclick=saveOnlineSchedule;
+$("onlineScheduleBtn").onclick=openOnlineSchedule;$("onlineScheduleWeeksBtn").onclick=openOnlineSchedule;$("onlineScheduleClose").onclick=()=>{if(!onlineScheduleBusy)$("onlineScheduleModal").classList.add("hidden")};$("onlineScheduleVerified").onchange=()=>{$("onlineScheduleRun").disabled=onlineScheduleBusy||!$("onlineScheduleVerified").checked;if(!$("onlineScheduleVerified").checked)$("onlineScheduleApply").disabled=true};$("onlineScheduleRun").onclick=runOnlineSchedule;$("onlineScheduleApply").onclick=saveOnlineSchedule;$("onlinePreviewAll").onclick=()=>exportOnlineSchedulePdf(null,true);$("onlineDownloadAll").onclick=()=>exportOnlineSchedulePdf(null,false);
 $("autoScheduleBtn").onclick=openAutoSchedule;$("autoScheduleClose").onclick=()=>$("autoScheduleModal").classList.add("hidden");$("autoScheduleVerified").onchange=()=>$("autoScheduleRun").disabled=!$("autoScheduleVerified").checked;$("autoScheduleRun").onclick=executeAutoSchedule;
 $("rotationBtn").onclick=openRotation;$("rotationCloseBtn").onclick=()=>$("rotationModal").classList.add("hidden");$("rotationRefreshBtn").onclick=recalculateRotation;$("rotationAllowRecent").onchange=recalculateRotation;$("rotationConfirmedTypes").onchange=()=>$("rotationApplyBtn").disabled=!rotationPlan?.suggestions.length||!$("rotationConfirmedTypes").checked;$("rotationPublisher").onchange=refreshRotationOptions;$("rotationApplyBtn").onclick=applyRotation;
-saveBtn.onclick=()=>{collectFormToWeek();alert("Saved on this device.")};pdfBtn.onclick=()=>{collectFormToWeek();downloadPdfForWeek(currentWeek())};previewBtn.onclick=previewPdf;previewDownloadBtn.onclick=()=>downloadPdfForWeek(currentWeek());closePreviewBtn.onclick=closePreview;printBtn.onclick=printCurrent;finalizeBtn.onclick=finalizeWeek;clearBtn.onclick=clearCurrentAssignments;
+saveBtn.onclick=()=>{collectFormToWeek();alert("Saved on this device.")};pdfBtn.onclick=()=>{collectFormToWeek();downloadPdfForWeek(currentWeek())};previewBtn.onclick=previewPdf;previewDownloadBtn.onclick=downloadPreviewPdf;closePreviewBtn.onclick=closePreview;printBtn.onclick=printCurrent;finalizeBtn.onclick=finalizeWeek;clearBtn.onclick=clearCurrentAssignments;
 createWeekBtn.onclick=createWeek;fetchJwBtn.onclick=()=>importJw("new");refreshJwBtn.onclick=()=>importJw("current");weekPdfInput.onchange=e=>{const f=e.target.files[0];if(f)importPdf(f,"new");e.target.value=""};currentPdfInput.onchange=e=>{const f=e.target.files[0];if(f)importPdf(f,"current");e.target.value=""};
 closeImportBtn.onclick=()=>importModal.classList.add("hidden");cancelImportBtn.onclick=()=>importModal.classList.add("hidden");confirmImportBtn.onclick=createWeekFromPendingImport;applyImportCurrentBtn.onclick=applyPendingToCurrent;
 weekSearch.oninput=renderWeeks;weekFilter.onchange=renderWeeks;weekSort.onchange=renderWeeks;newWeekStart.onchange=()=>{newWeekEnd.value=plusDays(newWeekStart.value,6);newWeekLabel.value=weekLabelFromDates(newWeekStart.value,newWeekEnd.value)};
