@@ -1,8 +1,8 @@
 {
   "name": "s140-meeting-scheduler",
-  "version": "5.7.0",
+  "version": "5.8.0",
   "private": true,
-  "description": "S-140 Meeting Scheduler v5.7 - Automatic scheduling",
+  "description": "S-140 Meeting Scheduler v5.8 - Published-week automatic scheduling",
   "scripts": {
     "start": "node server.js"
   },
