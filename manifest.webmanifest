@@ -1,7 +1,7 @@
 {
   "name": "S-140 Meeting Scheduler",
   "short_name": "S-140",
-  "description": "Ndandanda ya msonkhano - Cinyanja v5.5 - Reliability and recovery",
+  "description": "Ndandanda ya msonkhano - Cinyanja v5.6 - Intelligent rotation",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#087f8c",
