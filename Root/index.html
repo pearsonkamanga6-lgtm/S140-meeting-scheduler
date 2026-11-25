@@ -59,7 +59,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
 <body>
 <div class="app">
  <div class="topbar">
-  <div class="brand"><h1>S-140 Meeting Scheduler <span style="font-size:.72rem;background:#173f49;color:#fff;padding:3px 7px;border-radius:999px;vertical-align:middle">v5.4</span></h1><small>Ndandanda ya msonkhano • Cinyanja</small></div>
+  <div class="brand"><h1>S-140 Meeting Scheduler <span style="font-size:.72rem;background:#173f49;color:#fff;padding:3px 7px;border-radius:999px;vertical-align:middle">v5.5</span></h1><small>Ndandanda ya msonkhano • Cinyanja</small></div>
   <div class="tabs">
    <button class="tabbtn active" data-tab="scheduleTab">Schedule</button>
    <button class="tabbtn" data-tab="weeksTab">Weeks</button>
@@ -71,7 +71,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
  </div>
 
  <section id="scheduleTab" class="tab">
-  <div id="versionBanner" class="notice ok" style="margin-top:14px"><strong>Running version:</strong> v5.4. If you do not see v5.3 here, an older copy is still open.</div><div id="standaloneBanner" class="notice warn hidden" style="margin-top:14px"><strong>Standalone mode:</strong> PDF import works, but JW.org automatic fetch needs online mode. Extract the v5.2 ZIP and double-click <strong>START_S140_ONLINE.bat</strong>.</div>
+  <div id="versionBanner" class="notice ok" style="margin-top:14px"><strong>Running version:</strong> v5.5. Reliability, recovery and assignment checks.</div><div id="standaloneBanner" class="notice warn hidden" style="margin-top:14px"><strong>Standalone mode:</strong> PDF import works, but JW.org automatic fetch needs online mode. Extract the application ZIP and double-click <strong>START_S140_ONLINE.bat</strong>.</div>
   <div class="card">
    <div class="weekbar">
     <strong>Week:</strong>
@@ -115,7 +115,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
     <div class="field"><label>Mau Oyamba</label><input id="openingComments" value="1 min."><div class="smalltext muted">Cheyamani’s name appears automatically.</div></div>
    </div>
    <div id="conflictBox"></div>
-   <div class="notice ok"><strong>Role-specific memory:</strong> each dropdown remembers only that exact assignment. A recent Spiritual Gems assignment will not mark the same brother as recently used for Cheyamani, Bible Reading, Prayer, or another role.</div>
+   <div class="notice ok"><strong>Role-specific memory:</strong> Each dropdown considers past planned and finalized weeks; recent assignments in other roles can also trigger a warning.</div>
   </div>
 
   <div class="section treasures">
@@ -223,7 +223,7 @@ textarea{min-height:95px;resize:vertical}input:focus,select:focus,textarea:focus
    <h2 style="margin-top:0">Backup & Restore</h2>
    <p class="muted">Backups include all weeks, archived schedules, publishers, availability, templates and assignment history. Old v2.x backups are automatically migrated.</p>
    <div class="toolbar">
-    <button class="primary" id="exportBtn">Export Backup</button>
+    <button class="primary" id="exportBtn">Export Backup</button><button id="restoreCheckpointBtn">Undo Last Import / Restore</button>
     <label class="filelabel">Import Backup<input id="importFile" type="file" accept="application/json" style="display:none"></label>
    </div>
   </div>
@@ -267,6 +267,7 @@ const SEED=[["Aaron Mzumara", "brother", ["chairman", "prayer", "treasuresTalk",
 const ROLE_LABELS={chairman:"Chairman",counselor:"Auxiliary Classroom Counselor",prayer:"Prayer",treasuresTalk:"Treasures talk",spiritualGems:"Spiritual Gems",bibleReading:"Bible Reading",ministryStudent:"Field Ministry Student",ministryAssistant:"Field Ministry Assistant",livingTalk:"Living as Christians talk",cbsConductor:"CBS Conductor",cbsReader:"CBS Reader"};
 const BROTHER_ONLY=new Set(["chairman","counselor","prayer","treasuresTalk","spiritualGems","bibleReading","livingTalk","cbsConductor","cbsReader"]);
 const STORAGE_KEY="s140Scheduler";
+const CHECKPOINT_KEY=STORAGE_KEY+":recovery";
 const MONTHS=["January","February","March","April","May","June","July","August","September","October","November","December"];
 const $=id=>document.getElementById(id);
 function uid(prefix="id"){return prefix+"_"+Date.now()+"_"+Math.random().toString(16).slice(2)}
@@ -335,11 +336,15 @@ function isAvailable(pub,week){return availabilityFor(pub,week).length===0}
 function isEligible(pub,role,week){return !!(pub&&pub.active&&isAvailable(pub,week)&&(!BROTHER_ONLY.has(role)||pub.gender==="brother")&&pub.eligible?.[role])}
 function historyBefore(pubId,week,role=null){
  const cutoff=week.startDate||"9999-12-31";
- return state.history
-   .filter(h=>h.publisherId===pubId)
-   .filter(h=>!role || h.role===role)
-   .filter(h=>((h.weekStart||String(h.date||"").slice(0,10))<cutoff||!week.startDate))
-   .sort((a,b)=>String(b.weekStart||b.date||"").localeCompare(String(a.weekStart||a.date||"")))
+ const records=state.history.slice();
+ const finalized=new Set(records.map(h=>h.weekId).filter(Boolean));
+ for(const w of state.weeks){
+   if(w.id===week.id||w.archived||finalized.has(w.id)||!w.startDate||w.startDate>=cutoff)continue;
+   records.push(...assignmentRecords(w).map(r=>({...r,weekId:w.id,weekStart:w.startDate,weekLabel:w.label})));
+ }
+ return records.filter(h=>h.publisherId===pubId&&(!role||h.role===role))
+ .filter(h=>(h.weekStart||String(h.date||"").slice(0,10))<cutoff&&h.weekId!==week.id)
+ .sort((a,b)=>String(b.weekStart||b.date||"").localeCompare(String(a.weekStart||a.date||"")));
 }
 function guidance(pubId,week,role){
  const h=historyBefore(pubId,week,role);
@@ -383,30 +388,14 @@ function confirmRecentUsage(pubId,role,newLabel){
  }
  return true;
 }
-function confirmRecentUsageGeneral(pubId,newLabel){
- // Fallback: check ANY role within last 1 week (to catch frequent use across different parts)
+function confirmRecentUsageGeneral(pubId,role,newLabel){
  if(!pubId)return true;
- const w=currentWeek();
- const cutoff=w.startDate||"9999-12-31";
- const all=state.history.filter(h=>h.publisherId===pubId).filter(h=>((h.weekStart||String(h.date||"").slice(0,10))<cutoff||!w.startDate)).sort((a,b)=>String(b.weekStart||b.date||"").localeCompare(String(a.weekStart||a.date||"")));
- if(!all.length)return true;
- const last=all[0];
- const lastDate=parseDate(last.weekStart||String(last.date||"").slice(0,10));
- const curDate=parseDate(w.startDate);
- if(!lastDate||!curDate)return true;
- const days=Math.max(0,Math.round((curDate-lastDate)/86400000));
- const weeks=Math.floor(days/7);
- if(weeks<=1){
-   const name=pubName(pubId)||"This publisher";
-   const when=weeks===0?"recently":weeks===1?"last week":"2 weeks ago";
-   // Only warn if role-specific didn't already warn (avoid double)
-   const roleSpecific=recentUsageInfo(pubId,w,last.role);
-   if(roleSpecific && roleSpecific.weeks<=2)return true;
-   return confirm(`${name} was used ${when} for a different assignment.\n\nLast: ${last.part||last.role} (${last.weekLabel||last.weekStart})\nNow: ${newLabel}\n\nContinue to use ${name}?`);
- }
- return true;
+ const w=currentWeek(),same=recentUsageInfo(pubId,w,role);
+ if(same&&same.weeks!==null&&same.weeks<=2)return true;
+ const info=recentUsageInfo(pubId,w,null);
+ if(!info||info.weeks===null||info.weeks>1)return true;
+ return confirm(formatRecentWarning(pubName(pubId)||"This publisher",info,newLabel));
 }
-
 function eligiblePublishers(role,filter="all",selected="",historyRole=null){
  const w=currentWeek(),hr=historyRole||role;
  let arr=state.publishers.filter(p=>isEligible(p,role,w)).filter(p=>filter==="all"||p.gender===filter);
@@ -417,7 +406,8 @@ function eligiblePublishers(role,filter="all",selected="",historyRole=null){
    if(!bh.length)return 1;
    return String(ah[0].weekStart||ah[0].date||"").localeCompare(String(bh[0].weekStart||bh[0].date||""))||a.name.localeCompare(b.name)
  });
- return'<option value="">— Select —</option>'+arr.map(p=>{
+ const retained=selected&&!arr.some(p=>p.id===selected)?`<option value="${esc(selected)}" selected>⚠ ${esc(pubName(selected)||"Unknown publisher")} — review eligibility</option>`:"";
+ return '<option value="">— Select —</option>'+retained+arr.map(p=>{
    const ri=recentUsageInfo(p.id,w,hr);
    const isRecent=ri && ri.weeks!==null && ri.weeks<=2;
    const warn=isRecent?" ⚠️ USED "+(ri.weeks===0?"RECENTLY":ri.weeks===1?"LAST WEEK":ri.weeks+"W AGO")+" - ":"";
@@ -451,7 +441,7 @@ function collectFormToWeek(){
 }
 function refreshAssignmentSelects(){
  const w=currentWeek();
- document.querySelectorAll(".assignment-select").forEach(s=>{const cur=s.value||w.fields[s.id]||"";s.innerHTML=eligiblePublishers(s.dataset.role,"all",cur);s.value=cur});
+ document.querySelectorAll(".assignment-select").forEach(s=>{const cur=w.fields[s.id]||"";s.innerHTML=eligiblePublishers(s.dataset.role,"all",cur);s.value=cur});
 }
 function toggleAux(){
  const on=auxEnabled.checked;document.querySelectorAll(".aux-only").forEach(x=>x.classList.toggle("hidden",!on));auxCounselorWrap.classList.toggle("hidden",!on);currentWeek().auxEnabled=on
@@ -481,7 +471,7 @@ function renderMinistry(){
    const role=k==="assistant"?"ministryAssistant":p.type==="talk"?"ministryTalk":"ministryStudent";
    if(next&&next!==previous&&!confirmAdditionalAssignment(next,newLabel)){s.value=previous;return}
    if(next&&next!==previous&&!confirmRecentUsage(next,role,newLabel)){s.value=previous;return}
-   if(next&&next!==previous&&!confirmRecentUsageGeneral(next,newLabel)){s.value=previous;return}
+   if(next&&next!==previous&&!confirmRecentUsageGeneral(next,role,newLabel)){s.value=previous;return}
    p[h][k]=next;
    if(k==="student"&&p.type!=="talk"){const g=studentGender(next),a=pubById(p[h].assistant);if(a&&g&&a.gender!==g)p[h].assistant=""}
    saveState();renderMinistry();toggleAux();renderConflicts()
@@ -498,7 +488,7 @@ function renderLiving(){
    const label=`Part ${firstLivingNumber(w)+i}: ${p.title||"[Title]"}`;
    if(next&&next!==previous&&!confirmAdditionalAssignment(next,label)){x.value=previous;return}
    if(next&&next!==previous&&!confirmRecentUsage(next,"livingTalk",label)){x.value=previous;return}
-   if(next&&next!==previous&&!confirmRecentUsageGeneral(next,label)){x.value=previous;return}
+   if(next&&next!==previous&&!confirmRecentUsageGeneral(next,"livingTalk",label)){x.value=previous;return}
    p.person=next;saveState();renderConflicts()
  }));
  livingParts.querySelectorAll(".delete-living").forEach(b=>b.addEventListener("click",()=>{if(w.living.length<=1)return alert("Keep at least one Living as Christians part.");w.living.splice(+b.closest(".part").dataset.i,1);saveState();renderSchedule()}))
@@ -507,7 +497,7 @@ function collectLiving(){const w=currentWeek();document.querySelectorAll("#livin
 
 function assignmentRecords(w){
  const f=w.fields,a=[];const add=(id,partNo,part,role,hall="")=>{if(id)a.push({publisherId:id,partNo,part,role,hall})};
- add(f.chairman,0,"Cheyamani","chairman");add(f.openingPrayer,0,"Pemphero Loyamba","prayer");add(f.p1person,1,f.p1title||"Part 1","treasuresTalk");add(f.p2person,2,"Kufufuza Cuma Cauzimu","spiritualGems");add(f.p3main,3,"Kuwerenga Baibo","bibleReading","main");if(w.auxEnabled)add(f.p3aux,3,"Kuwerenga Baibo","bibleReading","aux");
+ add(f.chairman,0,"Cheyamani","chairman");if(w.auxEnabled)add(f.auxCounselor,-1,"Mlangizi wa Kalasi Yowonjezera","counselor","aux");add(f.openingPrayer,0,"Pemphero Loyamba","prayer");add(f.p1person,1,f.p1title||"Part 1","treasuresTalk");add(f.p2person,2,"Kufufuza Cuma Cauzimu","spiritualGems");add(f.p3main,3,"Kuwerenga Baibo","bibleReading","main");if(w.auxEnabled)add(f.p3aux,3,"Kuwerenga Baibo","bibleReading","aux");
  w.ministry.forEach((p,i)=>{const n=4+i;["main",...(w.auxEnabled?["aux"]:[])].forEach(h=>{add(p[h].student,n,p.title,p.type==="talk"?"ministryTalk":"ministryStudent",h);if(p.type!=="talk")add(p[h].assistant,n,p.title,"ministryAssistant",h)})});
  w.living.forEach((p,i)=>add(p.person,firstLivingNumber(w)+i,p.title,"livingTalk"));
  add(f.cbsConductor,cbsNo(w),"Phunzilo la Baibo la Mpingo","cbsConductor");add(f.cbsReader,cbsNo(w),"Phunzilo la Baibo la Mpingo","cbsReader");add(f.closingPrayer,99,"Pemphero Lothela","prayer");
@@ -566,8 +556,27 @@ function conflictIssues(w=currentWeek()){
  });
  w.ministry.forEach((p,i)=>["main",...(w.auxEnabled?["aux"]:[])].forEach(h=>{if(p.type!=="talk"&&p[h].student&&p[h].student===p[h].assistant)issues.push({level:"error",text:`Part ${4+i} ${h}: student and assistant are the same person.`});if(p.type!=="talk"&&p[h].student&&p[h].assistant&&studentGender(p[h].student)!==studentGender(p[h].assistant))issues.push({level:"error",text:`Part ${4+i} ${h}: student and assistant must be the same gender.`})}));
  if(w.auxEnabled)w.ministry.forEach((p,i)=>{["student","assistant"].forEach(k=>{if(p.main[k]&&p.main[k]===p.aux[k])issues.push({level:"error",text:`Part ${4+i}: ${pubName(p.main[k])} is assigned in both Main Hall and Auxiliary Classroom at the same time.`})})});
- rec.forEach(r=>{const p=pubById(r.publisherId);if(p&&!isAvailable(p,w))issues.push({level:"error",text:`${p.name} is marked unavailable for this week.`})});
- // NEW: Recent usage warnings (last 2 weeks)
+ rec.forEach(r=>{
+  const p=pubById(r.publisherId),role=r.role==="ministryTalk"?"ministryStudent":r.role;
+  if(!p||!isEligible(p,role,w)||(r.role==="ministryTalk"&&p.gender!=="brother"))
+   issues.push({level:"error",text:`${p?.name||"Unknown publisher"} is unavailable or ineligible for ${r.part}.`});
+ });
+ for(const [id,arr] of Object.entries(by)){
+  const parts=new Set();
+  for(const r of arr.filter(r=>r.partNo>0&&r.partNo<99)){
+    if(parts.has(r.partNo))issues.push({level:"error",text:`${pubName(id)} has simultaneous roles in part ${r.partNo}.`});
+    parts.add(r.partNo);
+  }
+ }
+ if(w.auxEnabled&&w.fields.auxCounselor&&w.fields.auxCounselor===w.fields.chairman)issues.push({level:"error",text:"Chairman and auxiliary counselor cannot be the same person."});
+ if(!w.startDate||!w.endDate||w.endDate<w.startDate)issues.push({level:"error",text:"Check the meeting week dates."});
+ // Consider later draft weeks as well when scheduling out of order.
+ const nextWeeks=state.weeks.filter(x=>x.id!==w.id&&!x.archived&&x.startDate>w.startDate&&x.startDate<=plusDays(w.startDate,14));
+ rec.forEach(r=>{for(const next of nextWeeks){
+   const future=assignmentRecords(next).find(x=>x.publisherId===r.publisherId&&x.role===r.role);
+   if(future)issues.push({level:"warn",text:`${pubName(r.publisherId)} already has a similar assignment in ${next.label}.`});
+ }});
+ // Recent usage warnings (last 2 weeks)
  rec.forEach(r=>{
    const info=recentUsageInfo(r.publisherId,w,r.role);
    if(info && info.weeks!==null && info.weeks<=2){
@@ -637,7 +646,7 @@ function openProfile(id){profilePublisherId=id;const p=pubById(id);if(!p)return;
  $("addAvailabilityBtn").onclick=()=>addAvailability(false);$("unavailableThisWeekBtn").onclick=()=>addAvailability(true);profileBody.querySelectorAll(".remove-avail").forEach(b=>b.onclick=()=>{p.availability=p.availability.filter(a=>a.id!==b.dataset.id);saveState();openProfile(p.id);renderSchedule();renderPublishers()})
 }
 function addAvailability(currentOnly){
- const p=pubById(profilePublisherId),w=currentWeek();let s=currentOnly?w.startDate:$("availStart").value,e=currentOnly?w.endDate:$("availEnd").value,r=currentOnly?`Unavailable ${w.label}`:$("availReason").value.trim();if(!s||!e)return alert("Choose both start and end dates.");p.availability??=[];p.availability.push({id:uid("a"),start:s,end:e,reason:r});saveState();openProfile(p.id);renderSchedule();renderPublishers()
+ const p=pubById(profilePublisherId),w=currentWeek();let s=currentOnly?w.startDate:$("availStart").value,e=currentOnly?w.endDate:$("availEnd").value,r=currentOnly?`Unavailable ${w.label}`:$("availReason").value.trim();if(!s||!e||e<s)return alert("Choose valid start and end dates.");p.availability??=[];p.availability.push({id:uid("a"),start:s,end:e,reason:r});saveState();openProfile(p.id);renderSchedule();renderPublishers()
 }
 
 function templateFromWeek(w,name,description=""){
@@ -681,7 +690,7 @@ async function fetchOfficialHtml(url){
    if(!r.ok){const msg=await r.text();throw new Error(msg||`Importer returned ${r.status}`)}
    return await r.text()
  }catch(e){
-   if(location.protocol==="file:")throw new Error("You opened the standalone HTML file. For Fetch from JW.org, extract the v4.8 ZIP and double-click START_S140_ONLINE.bat. It will open the same app in online mode automatically. PDF import can still work from the standalone file.");
+   if(location.protocol==="file:")throw new Error("You opened the standalone HTML file. For Fetch from JW.org, extract the application ZIP and double-click START_S140_ONLINE.bat. It will open the same app in online mode automatically. PDF import can still work from the standalone file.");
    throw new Error(`Could not reach the official JW.org page. ${e.message||directErr?.message||""}`)
  }
 }
@@ -1073,12 +1082,34 @@ function showImportPreview(data,mode="new"){
  confirmImportBtn.classList.toggle("hidden",mode!=="new");applyImportCurrentBtn.classList.toggle("hidden",mode!=="current");
  importModal.classList.remove("hidden")
 }
-function applyImportedData(w,data){
+function samePart(a,b){return !!a&&!!b&&clean(a).toLowerCase()===clean(b).toLowerCase()&&clean(a)!=="[Title]"}
+function applyImportedData(w,data,preserve=false){
+ const old=JSON.parse(JSON.stringify(w)),f=w.fields,of=old.fields;
+ if(preserve&&data.startDate&&data.startDate!==w.startDate)throw new Error("The imported programme is for a different week.");
  w.startDate=data.startDate||w.startDate;w.endDate=data.endDate||w.endDate;w.label=data.weekLabel||weekLabelFromDates(w.startDate,w.endDate);w.bibleReading=data.bibleReading||w.bibleReading;
- Object.assign(w.fields,{openingSong:data.openingSong||"",openingComments:data.openingComments||"1 min.",p1title:data.p1title||"[Title]",p3scripture:data.p3scripture||"",livingSong:data.livingSong||"",cbsReference:data.cbsReference||"",concludingComments:data.concludingComments||"3 min.",closingSong:data.closingSong||""});
- w.ministry=(data.ministry?.length?data.ministry:blankMinistry()).map(p=>({id:uid("m"),title:p.title||"[Title]",time:p.time||"5 min.",type:p.type||"demonstration",main:{student:"",assistant:"",filter:p.type==="talk"?"brother":"all"},aux:{student:"",assistant:"",filter:p.type==="talk"?"brother":"all"}}));
- w.living=(data.living?.length?data.living:blankLiving()).map(p=>({id:uid("l"),title:p.title||"[Title]",time:p.time||"10 min.",person:""}));
- w.source=data.source||null;clearWeekAssignments(w)
+ for(const k of ["openingSong","openingComments","p1title","p3scripture","livingSong","cbsReference","concludingComments","closingSong"]){
+  if(data[k]&&data[k]!=="[Title]")f[k]=data[k];
+  else if(!preserve)f[k]=({openingComments:"1 min.",p1title:"[Title]",concludingComments:"3 min."})[k]||"";
+ }
+ const ministry=data.ministry?.length?data.ministry:(preserve?null:blankMinistry());
+ const living=data.living?.length?data.living:(preserve?null:blankLiving());
+ if(ministry)w.ministry=ministry.map(p=>{
+  const fresh={id:uid("m"),title:p.title||"[Title]",time:p.time||"5 min.",type:p.type||"demonstration",main:{student:"",assistant:"",filter:p.type==="talk"?"brother":"all"},aux:{student:"",assistant:"",filter:p.type==="talk"?"brother":"all"}};
+  const matches=old.ministry.filter(q=>samePart(q.title,p.title)&&q.type===fresh.type);
+  const count=ministry.filter(q=>samePart(q.title,p.title)&&(q.type||"demonstration")===fresh.type).length;
+  if(preserve&&matches.length===1&&count===1){fresh.id=matches[0].id;fresh.main=matches[0].main;fresh.aux=matches[0].aux;}
+  return fresh;
+ });
+ if(living)w.living=living.map(p=>{
+  const matches=old.living.filter(q=>samePart(q.title,p.title)),count=living.filter(q=>samePart(q.title,p.title)).length;
+  const match=preserve&&matches.length===1&&count===1?matches[0]:null;
+  return{id:match?.id||uid("l"),title:p.title||"[Title]",time:p.time||"10 min.",person:match?.person||""}
+ });
+ w.source=data.source||old.source||null;
+ if(!preserve){clearWeekAssignments(w);return}
+ if(data.p1title&&!samePart(of.p1title,f.p1title))f.p1person="";
+ if(data.p3scripture&&!samePart(of.p3scripture,f.p3scripture)){f.p3main="";f.p3aux=""}
+ if(data.cbsReference&&!samePart(of.cbsReference,f.cbsReference)){f.cbsConductor="";f.cbsReader=""}
 }
 async function importJw(mode="new"){
  const start=mode==="new"?newWeekStart.value:currentWeek().startDate;if(!start)return alert("Choose the week start date first.");
@@ -1184,23 +1215,58 @@ function createWeekFromPendingImport(){
  if(!pendingImport)return;let w=blankWeek(pendingImport.startDate,pendingImport.endDate,pendingImport.weekLabel);const cur=currentWeek();if(cur?.congregation)w.congregation=cur.congregation;applyImportedData(w,pendingImport);state.weeks.push(w);state.currentWeekId=w.id;saveState();importModal.classList.add("hidden");renderEverything();switchTab("scheduleTab")
 }
 function applyPendingToCurrent(){
- if(!pendingImport)return;if(!confirm(`Replace the meeting titles, songs and scriptures for ${currentWeek().label}? Existing publisher assignments for this week will be cleared.`))return;applyImportedData(currentWeek(),pendingImport);saveState();importModal.classList.add("hidden");renderEverything();switchTab("scheduleTab")
+ if(!pendingImport)return;
+ collectFormToWeek();
+ const w=currentWeek(),copy=JSON.parse(JSON.stringify(w));
+ try{applyImportedData(copy,pendingImport,true)}catch(e){return alert(e.message)}
+ const oldCount=assignmentRecords(w).length,newCount=assignmentRecords(copy).length;
+ if(!confirm(`Update ${w.label}? ${newCount} existing assignments will be retained; ${Math.max(0,oldCount-newCount)} will need review because the parts changed. A recovery checkpoint will be saved.`))return;
+ if(!saveCheckpoint())return;
+ Object.assign(w,copy);saveState();importModal.classList.add("hidden");renderEverything();switchTab("scheduleTab");
 }
 async function checkImporterServer(){
- if(location.protocol==="file:"){serverStatus.innerHTML="<strong>Standalone mode.</strong> PDF import works here. For <strong>Fetch from JW.org</strong>, extract the v4.8 ZIP and double-click <strong>START_S140_ONLINE.bat</strong>. The browser will open automatically in online mode.";return}
+ if(location.protocol==="file:"){serverStatus.innerHTML="<strong>Standalone mode.</strong> PDF import works here. For <strong>Fetch from JW.org</strong>, extract the application ZIP and double-click <strong>START_S140_ONLINE.bat</strong>. The browser will open automatically in online mode.";return}
  try{const r=await fetch("/api/health",{cache:"no-store"});if(!r.ok)throw 0;serverStatus.innerHTML='<strong>Online importer connected.</strong> JW.org fetching and PDF upload are ready.'}
  catch(e){serverStatus.innerHTML='<strong>Static mode detected.</strong> PDF import works, but JW.org automatic fetching needs the included Node server (server.js).'}
 }
 
 function finalizeWeek(){
- collectFormToWeek();const w=currentWeek(),issues=conflictIssues(w);if(issues.some(i=>i.level==="error")&&!confirm("There are assignment errors. Finalize anyway?"))return;
- const now=new Date().toISOString(),rec=assignmentRecords(w).map(r=>({...r,weekId:w.id,weekLabel:w.label,weekStart:w.startDate,date:now}));state.history=state.history.filter(h=>h.weekId!==w.id&&h.weekLabel!==w.label).concat(rec);saveState();alert(`Recorded ${rec.length} assignments for ${w.label}.`);renderSchedule();renderPublishers()
+ collectFormToWeek();const w=currentWeek(),issues=conflictIssues(w);if(issues.some(i=>i.level==="error"))return alert("Resolve assignment errors before finalizing.");if(issues.some(i=>i.level==="warn")&&!confirm("There are assignment warnings. Finalize after reviewing them?"))return;
+ const now=new Date().toISOString(),rec=assignmentRecords(w).map(r=>({...r,weekId:w.id,weekLabel:w.label,weekStart:w.startDate,date:now}));state.history=state.history.filter(h=>h.weekId!==w.id).concat(rec);saveState();alert(`Recorded ${rec.length} assignments for ${w.label}.`);renderSchedule();renderPublishers()
 }
 function clearCurrentAssignments(){if(!confirm("Clear all assigned names for this week? Titles, songs, dates and scriptures will remain."))return;clearWeekAssignments(currentWeek());saveState();renderSchedule()}
 
-function exportBackup(){collectFormToWeek();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="S140_Meeting_Scheduler_v4_Backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
-function importBackup(file){const r=new FileReader();r.onload=()=>{try{state=migrate(JSON.parse(r.result));saveState();renderEverything();alert("Backup restored and migrated successfully.")}catch(e){console.error(e);alert("That backup could not be imported.")}};r.readAsText(file)}
-
+function exportBackup(){collectFormToWeek();const blob=new Blob([JSON.stringify(state,null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="S140_Meeting_Scheduler_v5_5_Backup.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1500)}
+function saveCheckpoint(){
+ try{localStorage.setItem(CHECKPOINT_KEY,JSON.stringify(state));return true}
+ catch(e){alert("Could not create a recovery checkpoint. Export a backup before trying again.");return false}
+}
+function validatedBackup(raw){
+ if(!raw||typeof raw!=="object"||!Array.isArray(raw.publishers)||!raw.publishers.every(p=>p&&typeof p.id==="string"&&typeof p.name==="string"&&p.eligible&&typeof p.eligible==="object"))throw new Error("Invalid publisher data.");
+ if(raw.version>=3&&(!Array.isArray(raw.weeks)||!raw.weeks.length||!raw.weeks.every(w=>w&&typeof w.id==="string"&&w.fields&&Array.isArray(w.ministry)&&Array.isArray(w.living)&&w.ministry.every(p=>p&&p.main&&p.aux)&&w.living.every(p=>p&&typeof p==="object"))))throw new Error("Invalid week data.");
+ if(!(raw.version>=3)&&!raw.schedule)throw new Error("Unrecognized backup format.");
+ if(raw.history!=null&&(!Array.isArray(raw.history)||!raw.history.every(h=>h&&typeof h.publisherId==="string")))throw new Error("Invalid history.");
+ const next=migrate(raw);next.history=next.history||[];
+ if(new Set(next.publishers.map(p=>p.id)).size!==next.publishers.length||new Set(next.weeks.map(w=>w.id)).size!==next.weeks.length)throw new Error("Duplicate identifiers.");
+ if(!next.weeks.some(w=>w.id===next.currentWeekId))next.currentWeekId=next.weeks[0].id;
+ return next
+}
+function importBackup(file){
+ const r=new FileReader();r.onload=()=>{try{
+  const next=validatedBackup(JSON.parse(r.result));
+  if(!confirm(`Restore ${next.publishers.length} publishers and ${next.weeks.length} weeks? Current data will be checkpointed first.`))return;
+  if(!saveCheckpoint())return;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(next));state=next;renderEverything();alert("Backup restored successfully.")
+ }catch(e){console.error(e);alert("Backup was not restored: "+e.message)}};
+ r.readAsText(file)
+}
+function restoreCheckpoint(){
+ try{
+  const raw=localStorage.getItem(CHECKPOINT_KEY);if(!raw)return alert("No recovery checkpoint yet.");
+  const next=validatedBackup(JSON.parse(raw));if(!confirm("Restore the previous checkpoint? Export the current data first if needed."))return;
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(next));state=next;renderEverything();alert("Recovery checkpoint restored.")
+ }catch(e){alert("Recovery failed: "+e.message)}
+}
 function pdfEscape(s){return clean(s).replace(/\\/g,"\\\\").replace(/\(/g,"\\(").replace(/\)/g,"\\)")}
 function hexRgb(hex){const h=hex.replace("#","");return[parseInt(h.slice(0,2),16)/255,parseInt(h.slice(2,4),16)/255,parseInt(h.slice(4,6),16)/255]}
 function buildPdfBlob(w){
@@ -1247,13 +1313,13 @@ function buildPdfBlob(w){
    let s=fit(txt,maxW,size,bold,6.6);
    if(width(txt,s,bold)<=maxW)return[{t:txt,s}];
    const words=txt.split(" ");let lines=[],cur="";
-   for(const word of words){
+   for(const [wi,word] of words.entries()){
      const n=cur?cur+" "+word:word;
      if(width(n,size,bold)<=maxW||!cur)cur=n;
-     else{lines.push(cur);cur=word;if(lines.length===maxLines-1)break}
+     else{lines.push(cur);cur=word;if(lines.length===maxLines-1){cur=words.slice(wi).join(" ");break}}
    }
    if(cur)lines.push(cur);
-   return lines.slice(0,maxLines).map(v=>({t:v,s:fit(v,maxW,size,bold,6.6)}))
+   return lines.slice(0,maxLines).map(v=>({t:v,s:Math.min(fit(v,maxW,size,bold,6.6),size*maxW/Math.max(1,width(v,size,bold)))}))
  }
  function cellText(txt,x,top,wid,hei,size=10,bold=false,color=colors.text,align="left",maxLines=2){
    const pad=6,ls=safeLines(txt,wid-pad*2,size,bold,maxLines);if(!ls.length)return;
@@ -1375,7 +1441,7 @@ function buildPdfBlob(w){
  const footerH=27,footerMid=M+CW*.50;
  cellText(`Mau Othela (${f.concludingComments||"3 min."}) - ${pubName(f.chairman)||"-"}`,M,y,CW*.50-5,footerH,9.6,true,colors.text,"left",2);
  cellText(`Nyimbo ${f.closingSong||"-"} ndi Pemphero: ${pubName(f.closingPrayer)||"-"}`,footerMid+5,y,CW*.50-5,footerH,9.5,true,colors.blue,"left",2);
- const stream=cmds.join("\n");const enc=new TextEncoder(),parts=[],offs=[0];const ps=s=>parts.push(enc.encode(s));ps("%PDF-1.4\n");
+ const scale=Math.min(1,(H-2*M)/Math.max(1,y+footerH-M));const stream=scale<1?`q ${scale.toFixed(6)} 0 0 ${scale.toFixed(6)} ${((W-W*scale)/2).toFixed(3)} ${((H-M)*(1-scale)).toFixed(3)} cm\n${cmds.join("\n")}\nQ`:cmds.join("\n");const enc=new TextEncoder(),parts=[],offs=[0];const ps=s=>parts.push(enc.encode(s));ps("%PDF-1.4\n");
  function obj(n,body,streamBytes){offs[n]=parts.reduce((a,b)=>a+b.length,0);ps(`${n} 0 obj\n${body}`);if(streamBytes){ps("\nstream\n");parts.push(streamBytes);ps("\nendstream")}ps("\nendobj\n")}
  obj(1,"<< /Type /Catalog /Pages 2 0 R >>");obj(2,"<< /Type /Pages /Kids [3 0 R] /Count 1 >>");obj(3,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${W} ${H}] /Resources << /Font << /F1 4 0 R /F2 5 0 R >> >> /Contents 6 0 R >>`);obj(4,"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding >>");obj(5,"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold /Encoding /WinAnsiEncoding >>");const sb=enc.encode(stream);obj(6,`<< /Length ${sb.length} >>`,sb);
  const xref=parts.reduce((a,b)=>a+b.length,0);ps("xref\n0 7\n0000000000 65535 f \n");for(let i=1;i<=6;i++)ps(String(offs[i]).padStart(10,"0")+" 00000 n \n");ps(`trailer\n<< /Size 7 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF`);
@@ -1401,7 +1467,7 @@ document.addEventListener("change",e=>{
    const newLabel=staticAssignmentLabel(s);
    if(next&&next!==previous&&!confirmAdditionalAssignment(next,newLabel)){s.value=previous;return}
    if(next&&next!==previous&&!confirmRecentUsage(next,role,newLabel)){s.value=previous;return}
-   if(next&&next!==previous&&!confirmRecentUsageGeneral(next,newLabel)){s.value=previous;return}
+   if(next&&next!==previous&&!confirmRecentUsageGeneral(next,role,newLabel)){s.value=previous;return}
    collectFormToWeek();renderConflicts()
  }
 });
@@ -1414,7 +1480,7 @@ closeImportBtn.onclick=()=>importModal.classList.add("hidden");cancelImportBtn.o
 weekSearch.oninput=renderWeeks;weekFilter.onchange=renderWeeks;weekSort.onchange=renderWeeks;newWeekStart.onchange=()=>{newWeekEnd.value=plusDays(newWeekStart.value,6);newWeekLabel.value=weekLabelFromDates(newWeekStart.value,newWeekEnd.value)};
 addPublisherBtn.onclick=addPublisher;cancelEditBtn.onclick=resetPublisherForm;pubSearch.oninput=renderPublishers;pubFilter.onchange=renderPublishers;closeProfileBtn.onclick=()=>profileModal.classList.add("hidden");
 saveTemplateBtn.onclick=saveCurrentAsTemplate;closeTemplateModalBtn.onclick=()=>templateModal.classList.add("hidden");
-exportBtn.onclick=exportBackup;importFile.onchange=e=>e.target.files[0]&&importBackup(e.target.files[0]);
+exportBtn.onclick=exportBackup;$("restoreCheckpointBtn").onclick=restoreCheckpoint;importFile.onchange=e=>e.target.files[0]&&importBackup(e.target.files[0]);
 window.addEventListener("beforeinstallprompt",e=>{e.preventDefault();deferredInstallPrompt=e;installBtn.classList.remove("hidden")});installBtn.onclick=async()=>{if(!deferredInstallPrompt)return alert("Install is available when this package is served from HTTPS or localhost in a supported browser.");deferredInstallPrompt.prompt();await deferredInstallPrompt.userChoice;deferredInstallPrompt=null;installBtn.classList.add("hidden")};
 async function resetLocalAppCaches(){
  const localHost=location.hostname==="127.0.0.1"||location.hostname==="localhost";
