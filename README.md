@@ -44,3 +44,6 @@ Run `npm start`; health endpoint: `/api/health`.
 - Match confirmed strengths and experience to estimated assignment difficulty, with manual overrides and reasons; no age, title, pioneer status or inferred personality scoring. Qualifications remain mandatory.
 - Confirm reciprocal family links explicitly; mixed-gender demonstrations are permitted only for verified family members.
 - Notes remain in device storage and exported backups, not PDFs or remote AI requests. Avoid confidential personal details. Existing public seed names remain a separate privacy issue.
+
+## Simplified dashboard
+Home screen with automatic scheduling, current schedule, saved weeks, publishers and AI assistant. Advanced actions are grouped under More actions; settings and backup are in the overflow menu. No release/version banner on the main UI. All previous scheduling and PDF functions retained.
