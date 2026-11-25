@@ -27,7 +27,7 @@ async function proxyJW(req,res,u){
   for(let hops=0;hops<=4;hops++){
    if(next.protocol!=="https:"||next.hostname!=="www.jw.org"||next.port||next.username||next.password||!next.pathname.startsWith("/nya/"))return send(res,403,"Only official Cinyanja pages on www.jw.org are allowed.");
    r=await fetch(next,{redirect:"manual",signal:AbortSignal.timeout(15000),headers:{
-    "User-Agent":"Mozilla/5.0 (compatible; S140MeetingScheduler/5.8)",
+    "User-Agent":"Mozilla/5.0 (compatible; S140MeetingScheduler/5.9)",
     "Accept":"text/html,application/xhtml+xml","Accept-Language":"ny,en;q=0.7"
    }});
    if(r.status<300||r.status>=400)break;
@@ -41,7 +41,7 @@ async function proxyJW(req,res,u){
 }
 const server=http.createServer(async(req,res)=>{
  const u=new URL(req.url,`http://${req.headers.host||"localhost"}`);
- if(u.pathname==="/api/health")return send(res,200,JSON.stringify({ok:true,service:"s140-jw-importer",version:"5.8.0"}),"application/json; charset=utf-8",{"Cache-Control":"no-store"});
+ if(u.pathname==="/api/health")return send(res,200,JSON.stringify({ok:true,service:"s140-jw-importer",version:"5.9.0"}),"application/json; charset=utf-8",{"Cache-Control":"no-store"});
  if(u.pathname==="/api/jw-proxy")return proxyJW(req,res,u);
  const file=safeFile(u.pathname);if(!file)return send(res,403,"Forbidden");
  fs.stat(file,(err,st)=>{

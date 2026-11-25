@@ -1,4 +1,4 @@
-# S-140 Meeting Scheduler v5.8 — Published-week automatic scheduling
+# S-140 Meeting Scheduler v5.9 — Online schedule PDF review and download
 
 - Preserves assignments when refreshing matching meeting parts; changed parts require review.
 - Checks prior draft and finalized assignments and warns about future scheduled repetitions.
@@ -32,3 +32,9 @@ Run `npm start`; health endpoint: `/api/health`.
 - Saves only after user review; preserves assigned, archived and finalized weeks and reports parse failures, unavailable roles and search limits.
 - Uses the current week by default, with adjustable start date and new-week auxiliary classroom preference.
 - Unrecognized ministry headings remain manual. No publisher data is sent to JW.org.
+
+## Suggested schedule PDFs
+- Preview or download a proposed individual week directly from online review.
+- Preview or download all proposed weeks in one chronological landscape PDF, one page per week.
+- PDFs are generated from the proposed snapshot (not the currently open saved week) and marked as draft, including an incomplete warning when applicable.
+- Export does not save or finalize the schedule; existing review and save controls remain separate.

@@ -22,7 +22,7 @@ const result=await run(`(async()=>{
  w.ministry[0].title="Example ministry";w.ministry[0].main.student=a.id;w.ministry[0].main.assistant=b.id;
  w.living[0].title="Example living";w.living[0].person=c.id;
  future.fields.p1person=a.id;
- renderEverything();check("page initialized",document.querySelector("h1").textContent.includes("v5.8"));
+ renderEverything();check("page initialized",document.querySelector("h1").textContent.includes("v5.9"));
  check("static selection retained",chairman.value===b.id);
  state.currentWeekId=prev.id;renderSchedule();check("switching weeks does not inherit old selection",chairman.value==="");
  state.currentWeekId=w.id;renderEverything();
@@ -138,6 +138,20 @@ const result=await run(`(async()=>{
  const protectedState=JSON.parse(JSON.stringify(batch.next));protectedState.weeks.find(w=>w.startDate===f1.entry.date).archived=true;
  const protectedPlan=planPublishedWeeks(protectedState,[f1],true,true);
  check("archived weeks remain untouched",protectedPlan.report[0].status.includes("Protected")&&JSON.stringify(protectedPlan.next)===JSON.stringify(protectedState));
+ const pdfBatch=suggestedPdf(batch),pdfSingle=suggestedPdf(batch,batch.report[1].weekId);
+ const batchText=await pdfBatch.blob.text(),singleText=await pdfSingle.blob.text();
+ check("suggested combined PDF has three chronological pages",pdfBatch.count===3&&batchText.includes("/Count 3")&&batchText.indexOf("February 1")<batchText.indexOf("February 8")&&batchText.indexOf("February 8")<batchText.indexOf("February 15"));
+ check("suggested individual PDF contains selected week only",pdfSingle.count===1&&singleText.includes("/Count 1")&&singleText.includes("February 8")&&!singleText.includes("February 15")&&pdfSingle.filename==="S140_Suggested_2027-02-08.pdf");
+ check("suggested PDFs contain draft labels and proposed assigned names",batchText.includes("DRAFT - REVIEW BEFORE FINALIZING")&&batchText.includes("Test batchBrother"));
+ const partial=JSON.parse(JSON.stringify(batch));partial.report[0].missing=["Unfilled prayer"];
+ check("incomplete schedule clearly marked in PDF",(await suggestedPdf(partial,partial.report[0].weekId).blob.text()).includes("DRAFT - INCOMPLETE / REVIEW REQUIRED"));
+ check("exporting suggested PDFs does not mutate state",JSON.stringify(state)===snapshot);
+ showSchedulePdf(pdfSingle.blob,pdfSingle.filename,"Suggested Schedule PDF (1 week)");
+ const originalDownload=downloadPdfBlob;let captured=null;downloadPdfBlob=(blob,filename)=>{captured={blob,filename}};
+ downloadPreviewPdf();downloadPdfBlob=originalDownload;
+ check("preview download uses same suggested PDF",captured?.blob===pdfSingle.blob&&captured?.filename===pdfSingle.filename);
+ closePreview();check("closing preview clears its file",previewPdfFile===null&&previewWrap.classList.contains("hidden"));
+ const xrefPos=Number(batchText.match(/startxref\\n(\\d+)/)[1]);check("combined PDF xref points to actual byte offset",batchText.slice(xrefPos,xrefPos+4)==="xref");
  const beforeSave=JSON.stringify(state);openOnlineSchedule();check("batch button requires eligibility review",$("onlineScheduleRun").disabled);
  $("onlineScheduleVerified").checked=true;$("onlineScheduleFrom").value="2027-02-01";$("onlineScheduleAux").value="yes";
  onlineSchedulePlan={...batch,fingerprint:JSON.stringify(state),options:["2027-02-01",false,true],errors:[]};
@@ -148,7 +162,7 @@ const result=await run(`(async()=>{
 })()`);
 for(const t of result)console.log('PASS',t);
 assert.equal(errors.length,0,JSON.stringify(errors));
-const health=await (await fetch(origin+'/api/health')).json();assert.equal(health.version,'5.8.0');
+const health=await (await fetch(origin+'/api/health')).json();assert.equal(health.version,'5.9.0');
 for(const p of ['/server.js','/.git/config','/%2e%2e%2fetc/passwd'])assert.equal((await fetch(origin+p)).status,403);
 console.log('PASS HTTP health and static file protection');console.log(result.length+1,'checks passed');
 }finally{ws.close()}
